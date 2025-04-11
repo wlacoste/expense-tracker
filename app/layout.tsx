@@ -46,14 +46,28 @@ export default function RootLayout({
           {`
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(
-                  function(registration) {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                  .then(function(registration) {
                     console.log('Service Worker registration successful with scope: ', registration.scope);
-                  },
-                  function(error) {
+                    
+                    // Check for updates on page load
+                    registration.update();
+                    
+                    // Set up periodic checks for updates
+                    setInterval(() => {
+                      registration.update();
+                      console.log('Checking for Service Worker updates...');
+                    }, 1000 * 60 * 60); // Check every hour
+                  })
+                  .catch(function(error) {
                     console.log('Service Worker registration failed: ', error);
-                  }
-                );
+                  });
+              });
+              
+              // Listen for service worker updates
+              navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('Service Worker updated, reloading for fresh content');
+                window.location.reload();
               });
             }
           `}

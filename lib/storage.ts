@@ -49,9 +49,57 @@ interface StorageData {
 
 const STORAGE_KEY = "expense-tracker-data"
 
+// Function to check if we're online
+export function isOnline(): boolean {
+  return typeof navigator !== "undefined" && navigator.onLine
+}
+
+// Function to register for online/offline events
+export function registerConnectivityListeners(onlineCallback: () => void, offlineCallback: () => void): () => void {
+  if (typeof window === "undefined") return () => {}
+
+  window.addEventListener("online", onlineCallback)
+  window.addEventListener("offline", offlineCallback)
+
+  // Return a cleanup function
+  return () => {
+    window.removeEventListener("online", onlineCallback)
+    window.removeEventListener("offline", offlineCallback)
+  }
+}
+
+// Safely try to register for background sync
+export function tryRegisterSync() {
+  // Only run this in the browser
+  if (typeof window === "undefined") return
+
+  // Check if service worker, sync manager, and navigator are available
+  if ("serviceWorker" in navigator && "SyncManager" in window) {
+    // Get the service worker registration
+    navigator.serviceWorker.ready
+      .then((registration) => {
+        // Use a short tag name to avoid length issues
+        return registration.sync.register("sync-data")
+      })
+      .catch((err) => {
+        // Just log the error but don't throw - this is non-critical functionality
+        console.log("Sync registration not available:", err.message)
+      })
+  }
+}
+
 export function saveData(data: StorageData): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+
+    // Try to register for background sync if we're online
+    if (isOnline()) {
+      // Use setTimeout to ensure this runs after the current execution context
+      // This helps avoid issues with the service worker not being ready
+      setTimeout(() => {
+        tryRegisterSync()
+      }, 0)
+    }
   } catch (error) {
     console.error("Error saving data to localStorage:", error)
   }

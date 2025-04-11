@@ -23,6 +23,8 @@ import {
   copyRecurringExpensesToNewMonth,
   copyInstallmentExpensesToNewMonth,
   shouldCopyTransactions,
+  isOnline,
+  registerConnectivityListeners,
 } from "@/lib/storage"
 import { getMonthlyIncomes } from "@/lib/utils"
 import type { AvailableLanguage } from "@/lib/translations"
@@ -84,6 +86,41 @@ export default function Home() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
   })
   const { toast } = useToast()
+
+  // Add this useEffect to handle online/offline status
+  useEffect(() => {
+    // Show initial offline status if needed
+    if (!isOnline()) {
+      toast({
+        title: "You're offline",
+        description: "The app will continue to work. Changes will sync when you're back online.",
+        duration: 3000,
+      })
+    }
+
+    // Register for online/offline events
+    const cleanup = registerConnectivityListeners(
+      // Online callback
+      () => {
+        toast({
+          title: "You're back online",
+          description: " ",
+          duration: 3000,
+        })
+      },
+      // Offline callback
+      () => {
+        toast({
+          title: "You're offline",
+          description: "The app will continue to work. Changes will sync when you're back online.",
+          duration: 3000,
+        })
+      },
+    )
+
+    // Clean up event listeners
+    return cleanup
+  }, [toast])
 
   // Calculate total monthly income for the current month
   const calculateTotalMonthlyIncome = () => {
