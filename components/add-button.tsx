@@ -2,14 +2,15 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, ArrowUpIcon, ArrowDownIcon } from "lucide-react"
+import { Plus, ArrowUpIcon, ArrowDownIcon, FolderIcon } from "lucide-react"
 
 interface AddButtonProps {
   onAddExpense: () => void
   onAddIncome: () => void
+  onAddCategory: () => void
 }
 
-export default function AddButton({ onAddExpense, onAddIncome }: AddButtonProps) {
+export default function AddButton({ onAddExpense, onAddIncome, onAddCategory }: AddButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const toggleMenu = () => {
@@ -26,6 +27,11 @@ export default function AddButton({ onAddExpense, onAddIncome }: AddButtonProps)
     setIsOpen(false)
   }
 
+  const handleAddCategory = () => {
+    onAddCategory()
+    setIsOpen(false)
+  }
+
   return (
     <>
       {/* Child buttons with animations */}
@@ -38,7 +44,7 @@ export default function AddButton({ onAddExpense, onAddIncome }: AddButtonProps)
           className="h-12 w-40 px-4 rounded-full shadow-lg flex items-center gap-2 transition-all duration-300 ease-in-out"
           onClick={handleAddIncome}
           style={{
-            transitionDelay: isOpen ? "0ms" : "150ms",
+            transitionDelay: isOpen ? "0ms" : "200ms",
           }}
         >
           <ArrowUpIcon className="h-5 w-5 text-green-500" />
@@ -49,11 +55,22 @@ export default function AddButton({ onAddExpense, onAddIncome }: AddButtonProps)
           className="h-12 w-40 px-4 rounded-full shadow-lg flex items-center gap-2 transition-all duration-300 ease-in-out"
           onClick={handleAddExpense}
           style={{
-            transitionDelay: isOpen ? "150ms" : "0ms",
+            transitionDelay: isOpen ? "100ms" : "100ms",
           }}
         >
           <ArrowDownIcon className="h-5 w-5 text-red-500" />
           <span>Add Expense</span>
+        </Button>
+
+        <Button
+          className="h-12 w-40 px-4 rounded-full shadow-lg flex items-center gap-2 transition-all duration-300 ease-in-out"
+          onClick={handleAddCategory}
+          style={{
+            transitionDelay: isOpen ? "200ms" : "0ms",
+          }}
+        >
+          <FolderIcon className="h-5 w-5 text-blue-500" />
+          <span>Add Category</span>
         </Button>
       </div>
 

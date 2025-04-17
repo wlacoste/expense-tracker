@@ -24,10 +24,13 @@ export function useDashboard(
   creditCards: CreditCard[],
   selectedMonth: string,
   language: string,
+  categorySorting: string,
+  setCategorySorting: (value: string) => void,
 ) {
   const [creditCardsExpanded, setCreditCardsExpanded] = useState(true)
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
-  const [categorySorting, setCategorySorting] = useState<string>("chronological")
+  // Remove the categorySorting state since it's now passed as a prop
+  // const [categorySorting, setCategorySorting] = useState<string>("chronological")
 
   // Get translations
   const t = getTranslations(language as any)

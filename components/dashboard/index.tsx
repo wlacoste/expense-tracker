@@ -51,7 +51,7 @@ export default function Dashboard({
       <div className="flex justify-between items-center">
         <div className="flex flex-col sm:flex-row sm:items-center gap-1">
           <h1 className="text-2xl font-bold text-foreground">{t.dashboard.title}</h1>
-          
+
           <span className="text-sm text-muted-foreground">
             {new Date().toLocaleDateString(locale, {
               weekday: "short",

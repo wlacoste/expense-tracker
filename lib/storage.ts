@@ -45,6 +45,7 @@ interface StorageData {
   creditCards: CreditCard[]
   lastAccessDate?: string // Added to track the last time the app was accessed
   language?: string // Added to store the user's language preference
+  categorySorting?: string // Added to store the category sorting preference
 }
 
 const STORAGE_KEY = "expense-tracker-data"

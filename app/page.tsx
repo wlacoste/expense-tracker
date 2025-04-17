@@ -41,6 +41,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([])
   const [creditCards, setCreditCards] = useState<CreditCard[]>([])
   const [language, setLanguage] = useState<AvailableLanguage>("en") // Default language is English
+  const [categorySorting, setCategorySorting] = useState<string>("chronological")
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
@@ -209,6 +210,10 @@ export default function Home() {
       if (data.language) {
         setLanguage(data.language as AvailableLanguage)
       }
+
+      if (data?.categorySorting) {
+        setCategorySorting(data.categorySorting)
+      }
     } else {
       // If no data exists, initialize with an "Others" category
       const othersCategory = {
@@ -275,9 +280,10 @@ export default function Home() {
       categories,
       creditCards,
       lastAccessDate: today,
-      language, // Save language preference
+      language,
+      categorySorting, // Add this line
     })
-  }, [expenses, incomes, categories, creditCards, language])
+  }, [expenses, incomes, categories, creditCards, language, categorySorting])
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage as AvailableLanguage)
@@ -568,7 +574,11 @@ export default function Home() {
       <main className="min-h-screen bg-background text-foreground pb-16">
         {renderContent()}
         <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-        <AddButton onAddExpense={() => setExpenseDialogOpen(true)} onAddIncome={() => setIncomeDialogOpen(true)} />
+        <AddButton
+          onAddExpense={() => setExpenseDialogOpen(true)}
+          onAddIncome={() => setIncomeDialogOpen(true)}
+          onAddCategory={() => setCategoryDialogOpen(true)}
+        />
         <AddExpenseDialog
           open={expenseDialogOpen}
           onOpenChange={(open) => {

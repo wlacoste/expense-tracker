@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
 import { formatCurrency } from "@/lib/utils"
-import { ChevronDown, ChevronRight, PlusCircle, ListOrderedIcon as SortIcon } from "lucide-react"
+import { ChevronDown, ChevronRight, ListOrderedIcon as SortIcon } from "lucide-react"
 import type { CategorySectionProps } from "./types"
 import { formatDate } from "./useDashboard"
 import {
@@ -46,33 +46,27 @@ export function CategorySection({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center">
-          <h2 className="text-xl font-bold mt-1 text-foreground">{t.dashboard.categories.title}</h2>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 ml-1 -mr-2">
-                <SortIcon className="h-4 w-4" />
-                <span className="sr-only">Sort categories</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuRadioGroup value={categorySorting} onValueChange={setCategorySorting}>
-                <DropdownMenuRadioItem value="chronological">Chronologically</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="chronological-inverse">Chronologically Inverse</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="alphabetical">Alphabetically</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="alphabetical-inverse">Alphabetically Inverse</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="budget">By Budget</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="budget-inverse">By Budget Inverse</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="last-expense">By Last Expense</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="last-expense-inverse">By Last Expense Inverse</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <Button onClick={onAddCategory} size="sm" variant="outline">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          {t.dashboard.categories.add}
-        </Button>
+        <h2 className="text-xl font-bold mt-1 text-foreground">{t.dashboard.categories.title}</h2>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <SortIcon className="h-4 w-4" />
+              <span className="sr-only">Sort categories</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuRadioGroup value={categorySorting} onValueChange={setCategorySorting}>
+              <DropdownMenuRadioItem value="chronological">Chronologically</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="chronological-inverse">Chronologically Inverse</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="alphabetical">Alphabetically</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="alphabetical-inverse">Alphabetically Inverse</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="budget">By Budget</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="budget-inverse">By Budget Inverse</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="last-expense">By Last Expense</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="last-expense-inverse">By Last Expense Inverse</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Budget Categories Section */}
