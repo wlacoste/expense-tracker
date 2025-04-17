@@ -27,6 +27,8 @@ interface Category {
   name: string
   budget?: number
   color: string
+  orderNumber: number
+  isDisabled: boolean
 }
 
 interface CreditCard {

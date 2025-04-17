@@ -22,6 +22,47 @@ export interface Translations {
       confirm: string
     }
   }
+  dashboard: {
+    title: string
+    income: string
+    expenses: {
+      title: string
+      note: string
+    }
+    budgeted: string
+    monthlySavings: {
+      title: string
+      note: string
+    }
+    currentSavings: {
+      title: string
+      note: string
+    }
+    endOfMonthProjection: {
+      title: string
+      note: string
+    }
+    creditCard: {
+      title: string
+      total: string
+      executed: string
+      pending: string
+      pendingWarning: string
+      cards: string
+      toggle: string
+      pendingSmall: string
+      upcoming: string
+      totalLabel: string
+      closing: string
+      due: string
+    }
+    categories: {
+      title: string
+      add: string
+      overBudget: string
+      noCategories: string
+    }
+  }
 }
 
 // Define the available languages
@@ -53,6 +94,47 @@ const translations: Record<AvailableLanguage, Translations> = {
         confirm: "Reset All Data",
       },
     },
+    dashboard: {
+      title: "Dashboard",
+      income: "Income",
+      expenses: {
+        title: "Expenses",
+        note: "(Excluding future credit card expenses)",
+      },
+      budgeted: "Budgeted",
+      monthlySavings: {
+        title: "Monthly Savings",
+        note: "End of month",
+      },
+      currentSavings: {
+        title: "Current Savings",
+        note: "(Up to today)",
+      },
+      endOfMonthProjection: {
+        title: "End of Month Projection",
+        note: "(Including pending expenses)",
+      },
+      creditCard: {
+        title: "Credit Card Expenses This Month",
+        total: "Total",
+        executed: "Executed",
+        pending: "Pending",
+        pendingWarning: "You have pending credit card expenses this month",
+        cards: "Credit Cards",
+        toggle: "Toggle Credit Cards",
+        pendingSmall: "pending",
+        upcoming: "Upcoming",
+        totalLabel: "Total:",
+        closing: "Closing:",
+        due: "Due:",
+      },
+      categories: {
+        title: "Budget Categories",
+        add: "Add Category",
+        overBudget:"Over budget by ",
+        noCategories: "No budget categories yet.",
+      },
+    },
   },
   es: {
     settings: {
@@ -76,6 +158,47 @@ const translations: Record<AvailableLanguage, Translations> = {
           "Esto eliminará permanentemente todos tus datos, incluyendo gastos, fuentes de ingresos y categorías. Esta acción no se puede deshacer.",
         cancel: "Cancelar",
         confirm: "Restablecer Todos los Datos",
+      },
+    },
+    dashboard: {
+      title: "Resumen",
+      income: "Ingresos",
+      expenses: {
+        title: "Gastos",
+        note: "(Excluyendo gastos futuros con tarjeta de crédito)",
+      },
+      budgeted: "Presupuestado",
+      monthlySavings: {
+        title: "Ahorro Mensual",
+        note: "Fin de mes",
+      },
+      currentSavings: {
+        title: "Ahorro Actual",
+        note: "(Hasta hoy)",
+      },
+      endOfMonthProjection: {
+        title: "Proyección Fin de Mes",
+        note: "(Incluye gastos pendientes)",
+      },
+      creditCard: {
+        title: "Gastos con Tarjeta de Crédito Este Mes",
+        total: "Total",
+        executed: "Ejecutado",
+        pending: "Pendiente",
+        pendingWarning: "Tienes gastos pendientes con tarjeta de crédito este mes",
+        cards: "Tarjetas de Crédito",
+        toggle: "Mostrar/Ocultar Tarjetas de Crédito",
+        upcoming: "Próximo",
+        pendingSmall: "pendiente",
+        totalLabel: "Total:",
+        closing: "Cierre:",
+        due: "Vencimiento:",
+      },
+      categories: {
+        title: "Categorías de Presupuesto",
+        add: "Agregar Categoría",
+        overBudget:"Sobrepasado en ",
+        noCategories: "Sin categorías de presupuesto aún.",
       },
     },
   },

@@ -13,15 +13,23 @@ interface Category {
   name: string
   budget: number
   color: string
+  orderNumber: number
+  isDisabled: boolean
 }
 
 interface AddCategoryDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAddCategory: (category: Category) => void
+  enabledCategoriesCount: number
 }
 
-export default function AddCategoryDialog({ open, onOpenChange, onAddCategory }: AddCategoryDialogProps) {
+export default function AddCategoryDialog({
+  open,
+  onOpenChange,
+  onAddCategory,
+  enabledCategoriesCount,
+}: AddCategoryDialogProps) {
   const [name, setName] = useState("")
   const [budget, setBudget] = useState("")
   const [color, setColor] = useState("#6366f1")
@@ -39,6 +47,8 @@ export default function AddCategoryDialog({ open, onOpenChange, onAddCategory }:
       name,
       budget: budget ? Number.parseFloat(budget) : 0,
       color,
+      orderNumber: enabledCategoriesCount, // Set order number to count of enabled categories
+      isDisabled: false, // Categories are enabled by default
     }
 
     onAddCategory(newCategory)

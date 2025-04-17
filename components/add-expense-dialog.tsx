@@ -39,6 +39,9 @@ interface Category {
   id: string
   name: string
   color: string
+  budget?: number
+  orderNumber: number
+  isDisabled: boolean
 }
 
 interface CreditCard {
@@ -50,24 +53,37 @@ interface CreditCard {
   isPaused: boolean
 }
 
+// Update the AddExpenseDialogProps interface to include the preselected category
 interface AddExpenseDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAddExpense: (expense: Expense | Expense[]) => void
   categories: Category[]
   creditCards: CreditCard[]
+  preselectedCategoryId?: string
 }
 
+// Update the component to use the preselected category
 export default function AddExpenseDialog({
   open,
   onOpenChange,
   onAddExpense,
   categories,
   creditCards,
+  preselectedCategoryId,
 }: AddExpenseDialogProps) {
+  // Update the categoryId state to use the preselected category if provided
+  const [categoryId, setCategoryId] = useState(preselectedCategoryId || "")
+
+  // Add an effect to update the category when the preselected category changes
+  useEffect(() => {
+    if (preselectedCategoryId) {
+      setCategoryId(preselectedCategoryId)
+    }
+  }, [preselectedCategoryId])
+
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
-  const [categoryId, setCategoryId] = useState("")
   const [creditCardId, setCreditCardId] = useState("")
   const [executionDate, setExecutionDate] = useState<string | undefined>(undefined)
   const [date, setDate] = useState(() => getTodayDate())
@@ -88,6 +104,7 @@ export default function AddExpenseDialog({
     }
   }, [creditCardId, date, creditCards])
 
+  // Update the handleSubmit function to ensure a category is always selected
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -114,7 +131,7 @@ export default function AddExpenseDialog({
         id: "", // Will be set in the parent component
         description,
         amount: totalAmount,
-        categoryId,
+        categoryId: categoryId || "", // Allow empty categoryId, will be handled in parent
         date,
         creditCardId: creditCardId || undefined,
         executionDate: executionDate,
@@ -190,7 +207,7 @@ export default function AddExpenseDialog({
           id: "", // Will be set in the parent component
           description: `${description} (${i + 1}/${installmentCount})`,
           amount: currentAmount,
-          categoryId,
+          categoryId: categoryId || "", // Allow empty categoryId, will be handled in parent
           date: installmentDate,
           creditCardId,
           executionDate: installmentExecutionDate,
@@ -224,6 +241,11 @@ export default function AddExpenseDialog({
 
   // Filter out paused credit cards
   const activeCreditCards = creditCards.filter((card) => !card.isPaused)
+
+  // Filter out disabled categories and sort by orderNumber
+  const activeCategories = categories
+    .filter((category) => !category.isDisabled)
+    .sort((a, b) => a.orderNumber - b.orderNumber)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -271,7 +293,7 @@ export default function AddExpenseDialog({
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {categories
+                {activeCategories
                   .filter((category) => category.name !== "Others")
                   .map((category) => (
                     <SelectItem key={category.id} value={category.id}>
@@ -283,15 +305,19 @@ export default function AddExpenseDialog({
                   ))}
 
                 {/* Add Others category at the end */}
-                {categories.find((category) => category.name === "Others") && (
+                {categories.find((category) => category.name === "Others" && !category.isDisabled) && (
                   <SelectItem
-                    key={categories.find((category) => category.name === "Others")!.id}
-                    value={categories.find((category) => category.name === "Others")!.id}
+                    key={categories.find((category) => category.name === "Others" && !category.isDisabled)!.id}
+                    value={categories.find((category) => category.name === "Others" && !category.isDisabled)!.id}
                   >
                     <div className="flex items-center">
                       <div
                         className="w-3 h-3 rounded-full mr-2"
-                        style={{ backgroundColor: categories.find((category) => category.name === "Others")!.color }}
+                        style={{
+                          backgroundColor: categories.find(
+                            (category) => category.name === "Others" && !category.isDisabled,
+                          )!.color,
+                        }}
                       />
                       Others
                     </div>

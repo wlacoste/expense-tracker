@@ -27,10 +27,10 @@ export default function AddButton({ onAddExpense, onAddIncome }: AddButtonProps)
   }
 
   return (
-    <div className="fixed right-4 bottom-20 flex flex-col items-end gap-3 z-20">
-      {/* Child buttons with animations - now above the main button */}
+    <>
+      {/* Child buttons with animations */}
       <div
-        className={`flex flex-col gap-2 items-end transition-all duration-300 ease-in-out ${
+        className={`fixed right-4 bottom-40 flex flex-col items-end gap-2 z-20 transition-all duration-300 ease-in-out ${
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
         }`}
       >
@@ -57,15 +57,17 @@ export default function AddButton({ onAddExpense, onAddIncome }: AddButtonProps)
         </Button>
       </div>
 
-      {/* Main FAB button */}
-      <Button
-        size="icon"
-        className="h-14 w-14 rounded-full shadow-lg transition-all duration-300 ease-in-out hover:scale-105"
-        onClick={toggleMenu}
-      >
-        <Plus className={`h-20 w-20 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
-        <span className="sr-only">Add</span>
-      </Button>
-    </div>
+      {/* Main FAB button - in a separate container */}
+      <div className="fixed right-4 bottom-24 z-20">
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full shadow-lg transition-all duration-300 ease-in-out hover:scale-105"
+          onClick={toggleMenu}
+        >
+          <Plus className={`h-20 w-20 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
+          <span className="sr-only">Add</span>
+        </Button>
+      </div>
+    </>
   )
 }

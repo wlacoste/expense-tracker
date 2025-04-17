@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
-import Dashboard from "@/components/dashboard"
+import Dashboard from "@/components/dashboard/index"
 import Transactions from "@/components/transactions"
 import Analytics from "@/components/analytics"
 import Settings from "@/components/settings"
@@ -28,47 +28,7 @@ import {
 } from "@/lib/storage"
 import { getMonthlyIncomes } from "@/lib/utils"
 import type { AvailableLanguage } from "@/lib/translations"
-
-// Define the types
-interface Expense {
-  id: string
-  description: string
-  amount: number
-  categoryId: string
-  date: string
-  creditCardId?: string
-  executionDate?: string
-  expenseInstallmentId?: string
-  installmentQuantity?: number
-  installmentNumber?: number
-  totalAmount?: number
-  isPaid?: boolean
-  isRecurring?: boolean
-}
-
-interface Income {
-  id: string
-  description: string
-  amount: number
-  date: string
-  isPaused: boolean
-}
-
-interface Category {
-  id: string
-  name: string
-  color: string
-  budget?: number
-}
-
-interface CreditCard {
-  id: string
-  description: string
-  closingDay: number
-  dueDay: number
-  goodThruDate: string
-  isPaused: boolean
-}
+import type { Expense, Income, Category, CreditCard } from "@/components/dashboard/types"
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -87,6 +47,21 @@ export default function Home() {
   })
   const { toast } = useToast()
 
+  // Add a new state for the preselected category
+  const [preselectedCategoryId, setPreselectedCategoryId] = useState<string | undefined>(undefined)
+
+  // Calculate the count of enabled categories for the orderNumber
+  const enabledCategoriesCount = categories.filter((cat) => !cat.isDisabled).length
+
+  // In the handleAddExpenseWithCategory function, check if the category is disabled
+  const handleAddExpenseWithCategory = (categoryId: string) => {
+    const category = categories.find((cat) => cat.id === categoryId)
+    if (category && !category.isDisabled) {
+      setPreselectedCategoryId(categoryId)
+      setExpenseDialogOpen(true)
+    }
+  }
+
   // Add this useEffect to handle online/offline status
   useEffect(() => {
     // Show initial offline status if needed
@@ -94,7 +69,7 @@ export default function Home() {
       toast({
         title: "You're offline",
         description: "The app will continue to work. Changes will sync when you're back online.",
-        duration: 3000,
+        duration: 5000,
       })
     }
 
@@ -104,7 +79,7 @@ export default function Home() {
       () => {
         toast({
           title: "You're back online",
-          description: " ",
+          description: "Your data will now sync automatically.",
           duration: 3000,
         })
       },
@@ -113,7 +88,7 @@ export default function Home() {
         toast({
           title: "You're offline",
           description: "The app will continue to work. Changes will sync when you're back online.",
-          duration: 3000,
+          duration: 5000,
         })
       },
     )
@@ -128,33 +103,41 @@ export default function Home() {
     return monthlyIncomes.filter((income) => !income.isPaused).reduce((total, income) => total + income.amount, 0)
   }
 
-  // Get or create the "Others" category with budget equal to total monthly income
+  // Update the getOrCreateOthersCategory function to handle the new fields
   const getOrCreateOthersCategory = () => {
-    let othersCategory = categories.find((cat) => cat.name === "Others")
+    const othersCategory = categories.find((cat) => cat.name === "Others")
     const totalMonthlyIncome = calculateTotalMonthlyIncome()
 
     if (!othersCategory) {
       // Create the Others category if it doesn't exist
-      othersCategory = {
+      const newOthersCategory = {
         id: `others-${Date.now()}`,
         name: "Others",
         color: "#9CA3AF", // Gray color
         budget: totalMonthlyIncome,
+        orderNumber: categories.length, // Set to the end
+        isDisabled: false, // Enabled by default
       }
-      setCategories([...categories, othersCategory])
+      // Important: Update the categories state immediately
+      setCategories((prevCategories) => [...prevCategories, newOthersCategory])
+      return newOthersCategory
     } else if (othersCategory.budget !== totalMonthlyIncome) {
       // Update the Others category budget if it's different from total monthly income
-      othersCategory = {
+      const updatedOthersCategory = {
         ...othersCategory,
         budget: totalMonthlyIncome,
       }
-      setCategories(categories.map((cat) => (cat.id === othersCategory!.id ? othersCategory! : cat)))
+      // Important: Update the categories state immediately
+      setCategories((prevCategories) =>
+        prevCategories.map((cat) => (cat.id === updatedOthersCategory.id ? updatedOthersCategory : cat)),
+      )
+      return updatedOthersCategory
     }
 
     return othersCategory
   }
 
-  // Ensure the Others category is included in the categories list for selectors
+  // Update the ensureOthersCategoryInList function to handle the new fields
   const ensureOthersCategoryInList = (categoriesList: Category[]) => {
     const othersCategory = categoriesList.find((cat) => cat.name === "Others")
     let updatedCategories = [...categoriesList]
@@ -167,6 +150,8 @@ export default function Home() {
         name: "Others",
         color: "#9CA3AF", // Gray color
         budget: totalMonthlyIncome,
+        orderNumber: categoriesList.length, // Set to the end
+        isDisabled: false, // Enabled by default
       }
       updatedCategories.push(newOthersCategory)
     } else {
@@ -199,12 +184,42 @@ export default function Home() {
     if (data) {
       setExpenses(data.expenses || [])
       setIncomes(data.incomes || [])
-      setCategories(data.categories || [])
+
+      // Set categories and ensure "Others" category exists
+      const loadedCategories = data.categories || []
+      const hasOthersCategory = loadedCategories.some((cat) => cat.name === "Others")
+
+      if (!hasOthersCategory) {
+        // Create the Others category if it doesn't exist
+        const othersCategory = {
+          id: `others-${Date.now()}`,
+          name: "Others",
+          color: "#9CA3AF", // Gray color
+          budget: 0,
+          orderNumber: loadedCategories.length, // Set to the end
+          isDisabled: false, // Enabled by default
+        }
+        setCategories([...loadedCategories, othersCategory])
+      } else {
+        setCategories(loadedCategories)
+      }
+
       setCreditCards(data.creditCards || [])
       // Load language preference if available
       if (data.language) {
         setLanguage(data.language as AvailableLanguage)
       }
+    } else {
+      // If no data exists, initialize with an "Others" category
+      const othersCategory = {
+        id: `others-${Date.now()}`,
+        name: "Others",
+        color: "#9CA3AF", // Gray color
+        budget: 0,
+        orderNumber: 0,
+        isDisabled: false,
+      }
+      setCategories([othersCategory])
     }
 
     // Check if we need to copy incomes to a new month
@@ -272,6 +287,9 @@ export default function Home() {
     })
   }
 
+  // Find the addExpense function and update it to ensure the "Others" category is created and assigned properly
+
+  // Update the addExpense function to ensure proper category assignment
   const addExpense = (expense: Expense | Expense[]) => {
     // Get or create the "Others" category with budget equal to total monthly income
     const othersCategory = getOrCreateOthersCategory()
@@ -284,7 +302,7 @@ export default function Home() {
         // Assign to Others category if no category is selected
         categoryId: exp.categoryId || othersCategory.id,
       }))
-      setExpenses([...expenses, ...expensesWithIds])
+      setExpenses([...expensesWithIds, ...expenses]) // Add new expenses at the beginning
       toast({
         title: "Installment expense added",
         description: `Your expense has been split into ${expensesWithIds.length} installments.`,
@@ -292,13 +310,13 @@ export default function Home() {
     } else {
       // Handle single expense
       setExpenses([
-        ...expenses,
         {
           ...expense,
           id: Date.now().toString(),
           // Assign to Others category if no category is selected
           categoryId: expense.categoryId || othersCategory.id,
         },
+        ...expenses, // Add new expense at the beginning
       ])
       toast({
         title: "Expense added",
@@ -317,6 +335,7 @@ export default function Home() {
     setIncomeDialogOpen(false)
   }
 
+  // Update the addCategory function to handle the new fields
   const addCategory = (category: Category) => {
     setCategories([...categories, { ...category, id: Date.now().toString() }])
     toast({
@@ -361,10 +380,6 @@ export default function Home() {
 
   const updateCategory = (updatedCategory: Category) => {
     setCategories(categories.map((category) => (category.id === updatedCategory.id ? updatedCategory : category)))
-    toast({
-      title: "Category updated",
-      description: "Your category has been updated successfully.",
-    })
   }
 
   const updateCreditCard = (updatedCreditCard: CreditCard) => {
@@ -402,6 +417,17 @@ export default function Home() {
   }
 
   const deleteCategory = (id: string) => {
+    // First check if it's the "Others" category
+    const category = categories.find((cat) => cat.id === id)
+    if (category && category.name === "Others") {
+      toast({
+        title: "Cannot delete system category",
+        description: "The 'Others' category is a system category and cannot be deleted.",
+        variant: "destructive",
+      })
+      return
+    }
+
     // Check if category is used in any expense
     const categoryInUse = expenses.some((expense) => expense.categoryId === id)
     if (categoryInUse) {
@@ -463,6 +489,8 @@ export default function Home() {
             selectedMonth={selectedMonth}
             setSelectedMonth={setSelectedMonth}
             onAddCategory={() => setCategoryDialogOpen(true)}
+            onAddExpenseWithCategory={handleAddExpenseWithCategory}
+            language={language}
           />
         )
       case "transactions":
@@ -522,6 +550,8 @@ export default function Home() {
             selectedMonth={selectedMonth}
             setSelectedMonth={setSelectedMonth}
             onAddCategory={() => setCategoryDialogOpen(true)}
+            onAddExpenseWithCategory={handleAddExpenseWithCategory}
+            language={language}
           />
         )
     }
@@ -541,13 +571,22 @@ export default function Home() {
         <AddButton onAddExpense={() => setExpenseDialogOpen(true)} onAddIncome={() => setIncomeDialogOpen(true)} />
         <AddExpenseDialog
           open={expenseDialogOpen}
-          onOpenChange={setExpenseDialogOpen}
+          onOpenChange={(open) => {
+            setExpenseDialogOpen(open)
+            if (!open) setPreselectedCategoryId(undefined) // Reset when dialog closes
+          }}
           onAddExpense={addExpense}
           categories={ensureOthersCategoryInList(categories)}
           creditCards={creditCards}
+          preselectedCategoryId={preselectedCategoryId}
         />
         <AddIncomeDialog open={incomeDialogOpen} onOpenChange={setIncomeDialogOpen} onAddIncome={addIncome} />
-        <AddCategoryDialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen} onAddCategory={addCategory} />
+        <AddCategoryDialog
+          open={categoryDialogOpen}
+          onOpenChange={setCategoryDialogOpen}
+          onAddCategory={addCategory}
+          enabledCategoriesCount={enabledCategoriesCount}
+        />
         <AddCreditCardDialog
           open={creditCardDialogOpen}
           onOpenChange={setCreditCardDialogOpen}

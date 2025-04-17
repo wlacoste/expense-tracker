@@ -399,7 +399,7 @@ export default function Analytics({ expenses, incomes, categories, selectedMonth
                     height={timeGrouping === "day" ? 80 : 30}
                   />
                   <YAxis />
-                  <RechartsTooltip content={<CustomTooltip />} />
+                  <RechartsTooltip wrapperStyle={{  color:'#000', borderRadius: 3, }} />
                   {/* Income Area with solid color */}
                   <Area
                     type="monotone"
@@ -464,7 +464,7 @@ export default function Analytics({ expenses, incomes, categories, selectedMonth
                 <CartesianGrid strokeDasharray="2 4" strokeWidth={0.5} />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <RechartsTooltip formatter={formatTooltipValue} />
+                <RechartsTooltip wrapperStyle={{  color:'#000', borderRadius: 3, }} />
                 <Bar dataKey="amount" name="Amount">
                   {chartData.categories.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

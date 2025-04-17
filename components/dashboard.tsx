@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,14 +17,20 @@ import {
   AlertCircleIcon,
   CalendarIcon,
   ChevronDown,
+  ChevronRight,
 } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ScrollableSelect } from "./scrollable-select"
+import { getTranslations } from "@/lib/translations"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+type AvailableLanguage = "en" | "pt"
 
 interface Expense {
   id: string
   amount: number
   date: string
+  description?: string
   categoryId: string
   creditCardId?: string
   executionDate?: string
@@ -41,6 +49,8 @@ interface Category {
   name: string
   color: string
   budget?: number
+  orderNumber: number
+  isDisabled: boolean
 }
 
 interface CreditCard {
@@ -52,7 +62,6 @@ interface CreditCard {
   isPaused: boolean
 }
 
-// Update the DashboardProps interface to include setSelectedMonth
 interface DashboardProps {
   expenses: Expense[]
   incomes: Income[]
@@ -61,9 +70,10 @@ interface DashboardProps {
   selectedMonth: string
   setSelectedMonth: (month: string) => void
   onAddCategory: () => void
+  onAddExpenseWithCategory: (categoryId: string) => void
+  language: string
 }
 
-// Update the Dashboard function to accept the new prop
 export default function Dashboard({
   expenses,
   incomes,
@@ -72,10 +82,17 @@ export default function Dashboard({
   selectedMonth,
   setSelectedMonth,
   onAddCategory,
+  onAddExpenseWithCategory,
+  language,
 }: DashboardProps) {
   const [creditCardsExpanded, setCreditCardsExpanded] = useState(true)
+  // Add state to track which categories are expanded
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
+  const [categorySorting, setCategorySorting] = useState<string>("chronological")
+
   const monthlyExpenses = useMemo(() => getMonthlyExpenses(expenses, selectedMonth), [expenses, selectedMonth])
   const monthlyIncomes = useMemo(() => getMonthlyIncomes(incomes, selectedMonth), [incomes, selectedMonth])
+  const t = getTranslations(language as AvailableLanguage)
 
   // Generate month options
   const { pastOptions, currentOption, futureOptions, currentYearMonth } = useMemo(
@@ -199,14 +216,18 @@ export default function Dashboard({
       })
   }, [creditCards, expenses, selectedMonth, creditCardExpensesThisMonth, today, currentDateStr])
 
-  const totalIncome = useMemo(() => {
-    return monthlyIncomes.reduce((sum, income) => {
-      if (!income.isPaused) {
-        return sum + income.amount
-      }
-      return sum
-    }, 0)
-  }, [monthlyIncomes])
+  // Calculate income up to today and pending income
+  const { executedIncome, pendingIncome } = useMemo(() => {
+    const executed = monthlyIncomes
+      .filter((income) => income.date <= currentDateStr)
+      .reduce((sum, income) => sum + income.amount, 0)
+
+    const pending = monthlyIncomes
+      .filter((income) => income.date > currentDateStr)
+      .reduce((sum, income) => sum + income.amount, 0)
+
+    return { executedIncome: executed, pendingIncome: pending }
+  }, [monthlyIncomes, currentDateStr])
 
   // Use adjusted expenses for the total
   const totalExpenses = useMemo(() => {
@@ -219,11 +240,13 @@ export default function Dashboard({
   }, [monthlyExpenses])
 
   const totalBudgeted = useMemo(() => {
-    return categories.reduce((sum, category) => sum + (category.budget || 0), 0)
+    return categories
+      .filter((category) => category.name !== "Others") // Exclude the "Others" category
+      .reduce((sum, category) => sum + (category.budget || 0), 0)
   }, [categories])
 
-  const monthlySavings = totalIncome - totalExpenses
-  const monthlySavingsEndOfMonth = totalIncome - totalExpensesEndOfMonth
+  const monthlySavings = executedIncome - totalExpenses
+  const monthlySavingsEndOfMonth = executedIncome + pendingIncome - totalExpensesEndOfMonth
 
   // Calculate historical savings (cumulative sum of monthly savings)
   const historicalSavings = useMemo(() => {
@@ -249,8 +272,6 @@ export default function Dashboard({
     // Group incomes by month and year
     const incomesByMonth: Record<string, number> = {}
     incomes.forEach((income) => {
-      if (income.isPaused) return
-
       // Skip future incomes
       if (income.date > currentDateStr) return
 
@@ -283,7 +304,7 @@ export default function Dashboard({
 
     // Add pending income for the current month
     const pendingIncome = monthlyIncomes
-      .filter((income) => !income.isPaused && income.date > currentDateStr)
+      .filter((income) => income.date > currentDateStr)
       .reduce((sum, income) => sum + income.amount, 0)
 
     // Add pending expenses for the current month
@@ -295,12 +316,22 @@ export default function Dashboard({
 
   // Group expenses by category for the current month
   const expensesByCategory = useMemo(() => {
-    const result: Record<string, number> = {}
-    adjustedMonthlyExpenses.forEach((expense) => {
-      result[expense.categoryId] = (result[expense.categoryId] || 0) + expense.amount
+    const result: Record<string, Expense[]> = {}
+
+    // Initialize with empty arrays for all categories
+    categories.forEach((category) => {
+      result[category.id] = []
     })
+
+    // Add expenses to their respective categories
+    monthlyExpenses.forEach((expense) => {
+      if (result[expense.categoryId]) {
+        result[expense.categoryId].push(expense)
+      }
+    })
+
     return result
-  }, [adjustedMonthlyExpenses])
+  }, [monthlyExpenses, categories])
 
   // Calculate total credit card expenses for this month
   const totalCreditCardExpensesThisMonth = useMemo(() => {
@@ -324,12 +355,26 @@ export default function Dashboard({
     return `${day}/${month}`
   }
 
+  // Toggle category expansion
+  const toggleCategoryExpansion = (categoryId: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent triggering the card click
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [categoryId]: !prev[categoryId],
+    }))
+  }
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+  }
+
   return (
     <div className="container mx-auto p-4 space-y-6 pb-20">
       {/* Replace the existing h1 heading with a flex container that includes the month selector */}
       <div className="flex justify-between items-center">
         <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t.dashboard.title}</h1>
           <span className="text-sm text-muted-foreground">
             {new Date().toLocaleDateString("en-US", {
               weekday: "short",
@@ -347,36 +392,40 @@ export default function Dashboard({
           currentOption={currentOption}
         />
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium">Income</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.income}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
               <ArrowDownIcon className="h-5 w-5 text-green-500" />
-              <span className="text-2xl font-bold">{formatCurrency(totalIncome)}</span>
+              <span className="text-2xl font-bold">{formatCurrency(executedIncome)}</span>
             </div>
+            {pendingIncome > 0 && (
+              <div className="text-xs text-muted-foreground text-right mt-1">
+                {formatCurrency(pendingIncome)} {t.dashboard.creditCard.pendingSmall}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.expenses.title}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
               <ArrowUpIcon className="h-5 w-5 text-red-500" />
               <span className="text-2xl font-bold">{formatCurrency(totalExpenses)}</span>
             </div>
-            <div className="text-xs text-muted-foreground text-right mt-1">(Excluding future credit card expenses)</div>
+            <div className="text-xs text-muted-foreground text-right mt-1">{t.dashboard.expenses.note}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium">Budgeted</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.budgeted}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
@@ -388,7 +437,7 @@ export default function Dashboard({
 
         <Card>
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Savings</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.monthlySavings.title}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
@@ -398,7 +447,7 @@ export default function Dashboard({
               </span>
             </div>
             <div className="text-xs text-muted-foreground text-right mt-1">
-              End of month: {formatCurrency(monthlySavingsEndOfMonth)}
+              {t.dashboard.monthlySavings.note} {formatCurrency(monthlySavingsEndOfMonth)}
             </div>
           </CardContent>
         </Card>
@@ -407,7 +456,7 @@ export default function Dashboard({
       <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium">Current Savings</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.currentSavings.title}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
@@ -416,13 +465,13 @@ export default function Dashboard({
                 {formatCurrency(historicalSavings)}
               </span>
             </div>
-            <div className="text-xs text-muted-foreground text-right mt-1">(Up to today)</div>
+            <div className="text-xs text-muted-foreground text-right mt-1">{t.dashboard.monthlySavings.note}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium">End of Month Projection</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.endOfMonthProjection.title}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
@@ -431,7 +480,7 @@ export default function Dashboard({
                 {formatCurrency(endOfMonthSavings)}
               </span>
             </div>
-            <div className="text-xs text-muted-foreground text-right mt-1">(Including pending expenses)</div>
+            <div className="text-xs text-muted-foreground text-right mt-1">{t.dashboard.monthlySavings.note}</div>
           </CardContent>
         </Card>
       </div>
@@ -439,24 +488,24 @@ export default function Dashboard({
       {/* Credit Card Expenses KPIs */}
       <Card>
         <CardHeader className="p-4 pb-2">
-          <CardTitle className="text-sm font-medium">Credit Card Expenses This Month</CardTitle>
+          <CardTitle className="text-sm font-medium">{t.dashboard.creditCard.title}</CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground text-right">Total</div>
+              <div className="text-xs text-muted-foreground text-right">{t.dashboard.creditCard.total}</div>
               <div className="text-xl font-bold text-right">{formatCurrency(totalCreditCardExpensesThisMonth)}</div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground text-right">Executed</div>
+              <div className="text-xs text-muted-foreground text-right">{t.dashboard.creditCard.executed}</div>
               <div className="text-xl font-bold text-green-500 text-right">
                 {formatCurrency(totalExecutedCreditCardExpenses)}
               </div>
             </div>
 
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground text-right">Pending</div>
+              <div className="text-xs text-muted-foreground text-right">{t.dashboard.creditCard.pending}</div>
               <div className="text-xl font-bold text-amber-500 text-right">
                 {formatCurrency(totalPendingCreditCardExpenses)}
               </div>
@@ -466,7 +515,7 @@ export default function Dashboard({
           {totalPendingCreditCardExpenses > 0 && (
             <div className="text-xs text-muted-foreground flex items-center">
               <AlertCircleIcon className="h-3 w-3 mr-1 text-amber-500" />
-              You have pending credit card expenses this month
+              {t.dashboard.creditCard.pendingWarning}
             </div>
           )}
         </CardContent>
@@ -476,13 +525,13 @@ export default function Dashboard({
       {creditCardMetrics.length > 0 && (
         <Collapsible open={creditCardsExpanded} onOpenChange={setCreditCardsExpanded} className="space-y-2">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Credit Cards</h2>
+            <h2 className="text-lg font-semibold">{t.dashboard.creditCard.cards}</h2>
             <div>
               <CollapsibleTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md p-0 text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                 <ChevronDown
                   className={`h-4 w-4 transition-transform duration-200 ${creditCardsExpanded ? "rotate-180" : ""}`}
                 />
-                <span className="sr-only">Toggle Credit Cards</span>
+                <span className="sr-only">{t.dashboard.creditCard.toggle}</span>
               </CollapsibleTrigger>
             </div>
           </div>
@@ -503,7 +552,7 @@ export default function Dashboard({
                         </div>
                         {metric.pendingTotal > 0 && (
                           <div className="text-xs font-medium text-amber-500">
-                            {formatCurrency(metric.pendingTotal)} pending
+                            {formatCurrency(metric.pendingTotal)} {t.dashboard.creditCard.pendingSmall}
                           </div>
                         )}
                       </div>
@@ -512,16 +561,16 @@ export default function Dashboard({
                       {/* Current Period Section */}
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <div className="text-sm text-muted-foreground">Total:</div>
+                          <div className="text-sm text-muted-foreground">{t.dashboard.creditCard.totalLabel}</div>
                           <div className="text-lg font-bold">{formatCurrency(metric.thisMonthTotal)}</div>
                         </div>
                         <div className="flex text-xs space-x-4 justify-end">
                           <div>
-                            <span className="text-muted-foreground">Closing: </span>
+                            <span className="text-muted-foreground">{t.dashboard.creditCard.closing} </span>
                             <span className="font-medium">{formatShortDate(metric.thisMonthClosingDate)}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground ml-2">Due: </span>
+                            <span className="text-muted-foreground ml-2">{t.dashboard.creditCard.due} </span>
                             <span className="font-medium">{formatShortDate(metric.thisMonthDueDate)}</span>
                           </div>
                         </div>
@@ -529,18 +578,18 @@ export default function Dashboard({
 
                       {/* Upcoming Period Section */}
                       <div className="space-y-1">
-                        <div className="text-xs font-medium">Upcoming</div>
+                        <div className="text-xs font-medium">{t.dashboard.creditCard.upcoming}</div>
                         <div className="flex justify-between items-center">
-                          <div className="text-xs text-muted-foreground">Total:</div>
+                          <div className="text-xs text-muted-foreground">{t.dashboard.creditCard.totalLabel}</div>
                           <div className="text-sm font-semibold">{formatCurrency(metric.nextMonthTotal)}</div>
                         </div>
                         <div className="flex text-xs space-x-4 justify-end">
                           <div>
-                            <span className="text-muted-foreground">Closing: </span>
+                            <span className="text-muted-foreground">{t.dashboard.creditCard.closing} </span>
                             <span className="font-medium">{formatShortDate(metric.nextMonthClosingDate)}</span>
                           </div>
                           <div>
-                            <span className="text-muted-foreground ml-2">Due: </span>
+                            <span className="text-muted-foreground ml-2">{t.dashboard.creditCard.due} </span>
                             <span className="font-medium">{formatShortDate(metric.nextMonthDueDate)}</span>
                           </div>
                         </div>
@@ -555,17 +604,90 @@ export default function Dashboard({
       )}
 
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold mt-1 text-foreground">Budget Categories</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold mt-1 text-foreground">{t.dashboard.categories.title}</h2>
+          <Select defaultValue="chronological" onValueChange={setCategorySorting}>
+            <SelectTrigger className="w-[180px] h-8">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="chronological">Chronologically</SelectItem>
+              <SelectItem value="chronological-inverse">Chronologically Inverse</SelectItem>
+              <SelectItem value="alphabetical">Alphabetically</SelectItem>
+              <SelectItem value="alphabetical-inverse">Alphabetically Inverse</SelectItem>
+              <SelectItem value="budget">By Budget</SelectItem>
+              <SelectItem value="budget-inverse">By Budget Inverse</SelectItem>
+              <SelectItem value="last-expense">By Last Expense</SelectItem>
+              <SelectItem value="last-expense-inverse">By Last Expense Inverse</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <Button onClick={onAddCategory} size="sm" variant="outline">
           <PlusCircle className="h-4 w-4 mr-2" />
-          Add Category
+          {t.dashboard.categories.add}
         </Button>
       </div>
 
       {/* Budget Categories Section */}
       <div className="space-y-4">
         {categories
-          .filter((category) => category.name !== "Others")
+          .filter((category) => {
+            // Always filter out "Others" category
+            if (category.name === "Others") return false
+
+            // Handle disabled categories
+            if (category.isDisabled) {
+              // Only include disabled categories if they have monthly expenses
+              const hasExpenses = monthlyExpenses.some((expense) => expense.categoryId === category.id)
+              return hasExpenses
+            }
+
+            // Include all enabled categories
+            return true
+          })
+          .sort((a, b) => {
+            // Get the newest expense date for each category (for last-expense sorting)
+            const getNewestExpenseDate = (categoryId: string) => {
+              const categoryExpenses = monthlyExpenses.filter((exp) => exp.categoryId === categoryId)
+              if (categoryExpenses.length === 0) return new Date(0) // No expenses
+              categoryExpenses.forEach(cat => {
+              console.log("cat date, ",cat.categoryId,cat.date)
+              } )
+              return new Date(Math.max(...categoryExpenses.map((exp) => new Date(exp.date).getTime())))
+            }
+
+            // Always place "Others" at the bottom regardless of sorting
+            if (a.name === "Others") return 1
+            if (b.name === "Others") return -1
+
+            // Apply the selected sorting method
+            switch (categorySorting) {
+              case "chronological":
+                return a.orderNumber - b.orderNumber
+              case "chronological-inverse":
+                return b.orderNumber - a.orderNumber
+              case "alphabetical":
+                return a.name.localeCompare(b.name)
+              case "alphabetical-inverse":
+                return b.name.localeCompare(a.name)
+              case "budget":
+                return (b.budget || 0) - (a.budget || 0)
+              case "budget-inverse":
+                return (a.budget || 0) - (b.budget || 0)
+              case "last-expense": {
+                const dateA = getNewestExpenseDate(a.id)
+                const dateB = getNewestExpenseDate(b.id)
+                return dateB.getTime() - dateA.getTime() // Newest first
+              }
+              case "last-expense-inverse": {
+                const dateA = getNewestExpenseDate(a.id)
+                const dateB = getNewestExpenseDate(b.id)
+                return dateA.getTime() - dateB.getTime() // Oldest first
+              }
+              default:
+                return a.orderNumber - b.orderNumber
+            }
+          })
           .map((category) => {
             // Get all expenses for this category
             const allExpensesForCategory = monthlyExpenses.filter((expense) => expense.categoryId === category.id)
@@ -589,11 +711,29 @@ export default function Dashboard({
 
             const isOverBudget = totalSpent > budget && budget > 0
 
+            // Get the category's expenses
+            const categoryExpenses = expensesByCategory[category.id] || []
+            const isExpanded = expandedCategories[category.id] || false
+
             return (
-              <Card key={category.id} className={isOverBudget ? "border-red-500" : ""}>
+              <Card
+                key={category.id}
+                className={`${isOverBudget ? "border-red-500" : ""} ${!category.isDisabled ? "cursor-pointer hover:bg-accent/50 transition-colors" : "opacity-50"}`}
+                onClick={!category.isDisabled ? () => onAddExpenseWithCategory(category.id) : undefined}
+              >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center">
+                      <button
+                        className="mr-2 p-1 rounded-full hover:bg-muted focus:outline-none focus:ring-1 focus:ring-ring"
+                        onClick={(e) => toggleCategoryExpansion(category.id, e)}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
                       <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: category.color }} />
                       <span className="font-medium">{category.name}</span>
                     </div>
@@ -602,7 +742,10 @@ export default function Dashboard({
                         {formatCurrency(executedAmount)}
                       </span>
                       {pendingAmount > 0 && (
-                        <span className="text-muted-foreground"> + {formatCurrency(pendingAmount)} pending</span>
+                        <span className="text-muted-foreground">
+                          {" "}
+                          + {formatCurrency(pendingAmount)} {t.dashboard.creditCard.pendingSmall}
+                        </span>
                       )}
                       {budget > 0 && <span className="text-muted-foreground"> / {formatCurrency(budget)}</span>}
                     </div>
@@ -619,8 +762,44 @@ export default function Dashboard({
                   </div>
 
                   {isOverBudget && (
-                    <p className="text-xs text-red-500 mt-1">Over budget by {formatCurrency(totalSpent - budget)}</p>
+                    <p className="text-xs text-red-500 mt-1">
+                      {t.dashboard.categories.overBudget} {formatCurrency(totalSpent - budget)}
+                    </p>
                   )}
+
+                  {/* Animated collapsible section for expenses */}
+                  <Collapsible open={isExpanded} className="mt-2">
+                    <CollapsibleContent className="data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+                      <div
+                        className="mt-1 pt-3 border-t border-border"
+                        onClick={(e) => e.stopPropagation()} // Add this line to stop propagation
+                      >
+                        <div className="text-xs font-medium mb-2">Expenses</div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {categoryExpenses.length > 0 ? (
+                            [...categoryExpenses]
+                              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                              .map((expense) => (
+                                <div
+                                  key={expense.id}
+                                  className="flex justify-between items-center text-sm p-1 rounded hover:bg-muted/50"
+                                >
+                                  <div className="flex-1">
+                                    <div className="font-medium">{expense.description || category.name}</div>
+                                    <div className="text-xs text-muted-foreground">{formatDate(expense.date)}</div>
+                                  </div>
+                                  <div className="font-medium">{formatCurrency(expense.amount)}</div>
+                                </div>
+                              ))
+                          ) : (
+                            <div className="text-sm text-muted-foreground text-center py-2">
+                              No expenses in this category
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </CardContent>
               </Card>
             )
@@ -651,11 +830,29 @@ export default function Dashboard({
 
             const isOverBudget = totalSpent > budget && budget > 0
 
+            // Get the category's expenses
+            const categoryExpenses = expensesByCategory[othersCategory.id] || []
+            const isExpanded = expandedCategories[othersCategory.id] || false
+
             return (
-              <Card key={othersCategory.id} className={isOverBudget ? "border-red-500" : ""}>
+              <Card
+                key={othersCategory.id}
+                className={`${isOverBudget ? "border-red-500" : ""} ${!othersCategory.isDisabled ? "cursor-pointer hover:bg-accent/50 transition-colors" : "opacity-50"}`}
+                onClick={!othersCategory.isDisabled ? () => onAddExpenseWithCategory(othersCategory.id) : undefined}
+              >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center">
+                      <button
+                        className="mr-2 p-1 rounded-full hover:bg-muted focus:outline-none focus:ring-1 focus:ring-ring"
+                        onClick={(e) => toggleCategoryExpansion(othersCategory.id, e)}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
                       <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: othersCategory.color }} />
                       <span className="font-medium">{othersCategory.name}</span>
                     </div>
@@ -664,7 +861,10 @@ export default function Dashboard({
                         {formatCurrency(executedAmount)}
                       </span>
                       {pendingAmount > 0 && (
-                        <span className="text-muted-foreground"> + {formatCurrency(pendingAmount)} pending</span>
+                        <span className="text-muted-foreground">
+                          {" "}
+                          + {formatCurrency(pendingAmount)} {t.dashboard.creditCard.pendingSmall}
+                        </span>
                       )}
                       {budget > 0 && <span className="text-muted-foreground"> / {formatCurrency(budget)}</span>}
                     </div>
@@ -681,8 +881,42 @@ export default function Dashboard({
                   </div>
 
                   {isOverBudget && (
-                    <p className="text-xs text-red-500 mt-1">Over budget by {formatCurrency(totalSpent - budget)}</p>
+                    <p className="text-xs text-red-500 mt-1">
+                      {t.dashboard.categories.overBudget} {formatCurrency(totalSpent - budget)}
+                    </p>
                   )}
+
+                  {/* Animated collapsible section for expenses */}
+                  <Collapsible open={isExpanded} className="mt-2">
+                    <CollapsibleContent className="data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+                      <div
+                        className="mt-1 pt-3 border-t border-border"
+                        onClick={(e) => e.stopPropagation()} // Add this line to stop propagation
+                      >
+                        <div className="text-xs font-medium mb-2">Expenses</div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {categoryExpenses.length > 0 ? (
+                            [...categoryExpenses].map((expense) => (
+                              <div
+                                key={expense.id}
+                                className="flex justify-between items-center text-sm p-1 rounded hover:bg-muted/50"
+                              >
+                                <div className="flex-1">
+                                  <div className="font-medium">{expense.description || othersCategory.name}</div>
+                                  <div className="text-xs text-muted-foreground">{formatDate(expense.date)}</div>
+                                </div>
+                                <div className="font-medium">{formatCurrency(expense.amount)}</div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-sm text-muted-foreground text-center py-2">
+                              No expenses in this category
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </CardContent>
               </Card>
             )
@@ -691,7 +925,7 @@ export default function Dashboard({
         {categories.length === 0 && (
           <Card>
             <CardContent className="p-4 text-center text-muted-foreground">
-              No budget categories yet.
+              {t.dashboard.categories.noCategories}
             </CardContent>
           </Card>
         )}
