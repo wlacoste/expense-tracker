@@ -46,11 +46,11 @@ export function CategorySection({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           <h2 className="text-xl font-bold mt-1 text-foreground">{t.dashboard.categories.title}</h2>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8 ml-1 -mr-2">
                 <SortIcon className="h-4 w-4" />
                 <span className="sr-only">Sort categories</span>
               </Button>
