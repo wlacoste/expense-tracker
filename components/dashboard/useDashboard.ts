@@ -186,9 +186,18 @@ export function useDashboard(
 
   const totalBudgeted = useMemo(() => {
     return categories
-      .filter((category) => category.name !== "Others") // Exclude the "Others" category
+      .filter((category) => {
+        // Always exclude the "Others" category
+        if (category.name === "Others") return false
+
+        // Include all enabled categories
+        if (!category.isDisabled) return true
+
+        // For disabled categories, only include them if they have expenses this month
+        return monthlyExpenses.some((expense) => expense.categoryId === category.id)
+      })
       .reduce((sum, category) => sum + (category.budget || 0), 0)
-  }, [categories])
+  }, [categories, monthlyExpenses])
 
   const monthlySavings = executedIncome - totalExpenses
   const monthlySavingsEndOfMonth = executedIncome + pendingIncome - totalExpensesEndOfMonth
