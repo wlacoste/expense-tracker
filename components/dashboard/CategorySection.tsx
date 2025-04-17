@@ -3,11 +3,17 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { formatCurrency } from "@/lib/utils"
-import { ChevronDown, ChevronRight, PlusCircle } from "lucide-react"
+import { ChevronDown, ChevronRight, PlusCircle, ListOrderedIcon as SortIcon } from "lucide-react"
 import type { CategorySectionProps } from "./types"
 import { formatDate } from "./useDashboard"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function CategorySection({
   categories,
@@ -42,21 +48,26 @@ export function CategorySection({
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold mt-1 text-foreground">{t.dashboard.categories.title}</h2>
-          <Select defaultValue={categorySorting} onValueChange={setCategorySorting}>
-            <SelectTrigger className="w-[180px] h-8">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="chronological">Chronologically</SelectItem>
-              <SelectItem value="chronological-inverse">Chronologically Inverse</SelectItem>
-              <SelectItem value="alphabetical">Alphabetically</SelectItem>
-              <SelectItem value="alphabetical-inverse">Alphabetically Inverse</SelectItem>
-              <SelectItem value="budget">By Budget</SelectItem>
-              <SelectItem value="budget-inverse">By Budget Inverse</SelectItem>
-              <SelectItem value="last-expense">By Last Expense</SelectItem>
-              <SelectItem value="last-expense-inverse">By Last Expense Inverse</SelectItem>
-            </SelectContent>
-          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <SortIcon className="h-4 w-4" />
+                <span className="sr-only">Sort categories</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuRadioGroup value={categorySorting} onValueChange={setCategorySorting}>
+                <DropdownMenuRadioItem value="chronological">Chronologically</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="chronological-inverse">Chronologically Inverse</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="alphabetical">Alphabetically</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="alphabetical-inverse">Alphabetically Inverse</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="budget">By Budget</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="budget-inverse">By Budget Inverse</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="last-expense">By Last Expense</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="last-expense-inverse">By Last Expense Inverse</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <Button onClick={onAddCategory} size="sm" variant="outline">
           <PlusCircle className="h-4 w-4 mr-2" />
