@@ -497,6 +497,8 @@ export default function Home() {
             onAddCategory={() => setCategoryDialogOpen(true)}
             onAddExpenseWithCategory={handleAddExpenseWithCategory}
             language={language}
+            categorySorting={categorySorting}
+            setCategorySorting={setCategorySorting}
           />
         )
       case "transactions":
@@ -558,6 +560,8 @@ export default function Home() {
             onAddCategory={() => setCategoryDialogOpen(true)}
             onAddExpenseWithCategory={handleAddExpenseWithCategory}
             language={language}
+            categorySorting={categorySorting}
+            setCategorySorting={setCategorySorting}
           />
         )
     }

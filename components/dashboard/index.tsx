@@ -17,6 +17,8 @@ export default function Dashboard({
   onAddCategory,
   onAddExpenseWithCategory,
   language,
+  categorySorting,
+  setCategorySorting,
 }: DashboardProps) {
   const {
     t,
@@ -39,11 +41,18 @@ export default function Dashboard({
     creditCardsExpanded,
     setCreditCardsExpanded,
     expandedCategories,
-    categorySorting,
-    setCategorySorting,
     toggleCategoryExpansion,
     locale,
-  } = useDashboard(expenses, incomes, categories, creditCards, selectedMonth, language)
+  } = useDashboard(
+    expenses,
+    incomes,
+    categories,
+    creditCards,
+    selectedMonth,
+    language,
+    categorySorting,
+    setCategorySorting,
+  )
 
   return (
     <div className="container mx-auto p-4 space-y-6 pb-20">

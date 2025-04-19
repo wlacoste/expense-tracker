@@ -53,6 +53,7 @@ export interface CreditCardMetric {
   pendingTotal: number
 }
 
+// Update the DashboardProps interface to include categorySorting and setCategorySorting
 export interface DashboardProps {
   expenses: Expense[]
   incomes: Income[]
@@ -63,6 +64,8 @@ export interface DashboardProps {
   onAddCategory: () => void
   onAddExpenseWithCategory: (categoryId: string) => void
   language: string
+  categorySorting: string
+  setCategorySorting: (value: string) => void
 }
 
 export interface CategorySectionProps {
