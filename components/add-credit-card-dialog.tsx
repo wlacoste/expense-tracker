@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getTranslations } from "@/lib/translations"
 
 interface CreditCard {
   id: string
@@ -23,21 +24,23 @@ interface AddCreditCardDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAddCreditCard: (creditCard: CreditCard) => void
+  language:string
 }
 
-export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCard }: AddCreditCardDialogProps) {
+export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCard, language }: AddCreditCardDialogProps) {
   const [description, setDescription] = useState("")
   const [closingDay, setClosingDay] = useState("")
   const [dueDay, setDueDay] = useState("")
   const [goodThruMonth, setGoodThruMonth] = useState("")
   const [goodThruYear, setGoodThruYear] = useState("")
   const [isPaused, setIsPaused] = useState(false)
+  const t = getTranslations(language as any)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!description) {
-      alert("Please enter a description")
+      alert(t.dialog.creditCardDescriptionAlert)
       return
     }
 
@@ -45,17 +48,17 @@ export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCar
     const dueDayNum = Number.parseInt(dueDay, 10)
 
     if (isNaN(closingDayNum) || closingDayNum < 1 || closingDayNum > 30) {
-      alert("Please enter a valid closing day (1-30)")
+      alert(t.dialog.creditCardClosingDayAlert)
       return
     }
 
     if (isNaN(dueDayNum) || dueDayNum < 1 || dueDayNum > 30) {
-      alert("Please enter a valid due day (1-30)")
+      alert(t.dialog.creditCardDueDayAlert)
       return
     }
 
     if (!goodThruMonth || !goodThruYear) {
-      alert("Please select both month and year for Good Thru date")
+      alert(t.dialog.creditCardGoodThruAlert)
       return
     }
 
@@ -92,13 +95,13 @@ export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCar
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Credit Card</DialogTitle>
+        <DialogTitle>{t.dialog.addCreditCardTitle}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="credit-card-description">Description</Label>
-            <Input
+          <Label htmlFor="credit-card-description">{t.dialog.creditCardDescriptionLabel}</Label>
+          <Input
               id="credit-card-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -108,8 +111,8 @@ export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCar
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="credit-card-closing-day">Closing Day (1-30)</Label>
-            <Input
+          <Label htmlFor="credit-card-closing-day">{t.dialog.creditCardClosingDayLabel}</Label>
+          <Input
               id="credit-card-closing-day"
               type="number"
               inputMode="numeric"
@@ -123,8 +126,8 @@ export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCar
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="credit-card-due-day">Due Day (1-30)</Label>
-            <Input
+          <Label htmlFor="credit-card-due-day">{t.dialog.creditCardDueDayLabel}</Label>
+          <Input
               id="credit-card-due-day"
               type="number"
               inputMode="numeric"
@@ -138,14 +141,19 @@ export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCar
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="credit-card-good-thru">Good Thru (Month/Year)</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <Label htmlFor="credit-card-good-thru">{t.dialog.creditCardGoodThruLabel}</Label>
+          <div className="grid grid-cols-2 gap-2">
               <Select value={goodThruMonth} onValueChange={setGoodThruMonth} required>
                 <SelectTrigger id="credit-card-good-thru-month">
-                  <SelectValue placeholder="Month" />
+                <SelectValue placeholder={t.dialog.selectMonthPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">January</SelectItem>
+                {t.dialog.months.map((month, index) => (
+                  <SelectItem key={index} value={(index + 1).toString()}>
+                    {month}
+                  </SelectItem>
+                ))}
+                  {/* <SelectItem value="1">January</SelectItem>
                   <SelectItem value="2">February</SelectItem>
                   <SelectItem value="3">March</SelectItem>
                   <SelectItem value="4">April</SelectItem>
@@ -156,13 +164,13 @@ export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCar
                   <SelectItem value="9">September</SelectItem>
                   <SelectItem value="10">October</SelectItem>
                   <SelectItem value="11">November</SelectItem>
-                  <SelectItem value="12">December</SelectItem>
+                  <SelectItem value="12">December</SelectItem> */}
                 </SelectContent>
               </Select>
 
               <Select value={goodThruYear} onValueChange={setGoodThruYear} required>
                 <SelectTrigger id="credit-card-good-thru-year">
-                  <SelectValue placeholder="Year" />
+                <SelectValue placeholder={t.dialog.selectYearPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 10 }, (_, i) => (
@@ -177,11 +185,11 @@ export default function AddCreditCardDialog({ open, onOpenChange, onAddCreditCar
 
           <div className="flex items-center space-x-2">
             <Switch id="credit-card-paused" checked={isPaused} onCheckedChange={setIsPaused} />
-            <Label htmlFor="credit-card-paused">Pause this credit card</Label>
-          </div>
+            <Label htmlFor="credit-card-paused">{t.dialog.creditCardPausedLabel}</Label>
+            </div>
 
           <Button type="submit" className="w-full">
-            Add Credit Card
+          {t.dialog.addCreditCardButton}
           </Button>
         </form>
       </DialogContent>

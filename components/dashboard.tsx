@@ -24,7 +24,7 @@ import { ScrollableSelect } from "./scrollable-select"
 import { getTranslations } from "@/lib/translations"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-type AvailableLanguage = "en" | "pt"
+type AvailableLanguage = "en" | "es"
 
 interface Expense {
   id: string

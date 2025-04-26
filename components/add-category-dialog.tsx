@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { getTranslations } from "@/lib/translations"
 
 interface Category {
   id: string
@@ -22,6 +23,7 @@ interface AddCategoryDialogProps {
   onOpenChange: (open: boolean) => void
   onAddCategory: (category: Category) => void
   enabledCategoriesCount: number
+  language: string
 }
 
 export default function AddCategoryDialog({
@@ -29,16 +31,18 @@ export default function AddCategoryDialog({
   onOpenChange,
   onAddCategory,
   enabledCategoriesCount,
+  language
 }: AddCategoryDialogProps) {
   const [name, setName] = useState("")
   const [budget, setBudget] = useState("")
   const [color, setColor] = useState("#6366f1")
+  const t = getTranslations(language as any)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!name) {
-      alert("Please enter a category name")
+      alert(t.dialog.pleaseEnterCategoryName)
       return
     }
 
@@ -65,24 +69,24 @@ export default function AddCategoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Category</DialogTitle>
+          <DialogTitle>{t.dialog.addCategoryTitle}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="category-name">Name</Label>
-            <Input
+          <Label htmlFor="category-name">{t.dialog.categoryNameLabel}</Label>
+          <Input
               id="category-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Groceries, Rent, Entertainment"
+              placeholder={t.dialog.categoryNamePlaceholder}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category-budget">Monthly Budget (optional)</Label>
-            <Input
+          <Label htmlFor="category-budget">{t.dialog.categoryBudgetLabel}</Label>
+          <Input
               id="category-budget"
               type="number"
               inputMode="decimal"
@@ -95,8 +99,8 @@ export default function AddCategoryDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category-color">Color</Label>
-            <div className="flex items-center gap-2">
+          <Label htmlFor="category-color">{t.dialog.categoryColorLabel}</Label>
+          <div className="flex items-center gap-2">
               <Input
                 id="category-color"
                 type="color"
@@ -109,7 +113,7 @@ export default function AddCategoryDialog({
           </div>
 
           <Button type="submit" className="w-full">
-            Add Category
+            {t.dialog.addCategoryButton}
           </Button>
         </form>
       </DialogContent>

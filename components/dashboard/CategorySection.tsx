@@ -229,7 +229,7 @@ export function CategorySection({
                               ))
                           ) : (
                             <div className="text-sm text-muted-foreground text-center py-2">
-                              No expenses in this category
+                              {t.dashboard.noExpensesInCategory}
                             </div>
                           )}
                         </div>
@@ -341,7 +341,7 @@ export function CategorySection({
                             ))
                           ) : (
                             <div className="text-sm text-muted-foreground text-center py-2">
-                              No expenses in this category
+                              {t.dashboard.noExpensesInCategory}
                             </div>
                           )}
                         </div>

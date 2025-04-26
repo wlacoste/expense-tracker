@@ -62,6 +62,89 @@ export interface Translations {
       overBudget: string
       noCategories: string
     }
+    sortCategories: string
+    sortOptions: {
+      chronological: string
+      chronologicalInverse: string
+      alphabetical: string
+      alphabeticalInverse: string
+      budget: string
+      budgetInverse: string
+      lastExpense: string
+      lastExpenseInverse: string
+    }
+    noExpensesInCategory: string
+    addIncome: string
+    addExpense: string
+    addCategory: string
+    addLabel: string
+  }
+  dialog:{
+    pleaseEnterCategoryName: string
+    addCategoryTitle: string
+    categoryNameLabel: string
+    categoryBudgetLabel: string
+    categoryColorLabel: string
+    addCategoryButton: string
+    categoryNamePlaceholder: string
+    addCreditCardTitle: string
+    creditCardDescriptionLabel: string
+    creditCardClosingDayLabel: string
+    creditCardDueDayLabel: string
+    creditCardGoodThruLabel: string
+    creditCardPausedLabel: string
+    addCreditCardButton: string
+    creditCardDescriptionAlert: string
+    creditCardClosingDayAlert: string
+    creditCardDueDayAlert: string
+    creditCardGoodThruAlert: string
+    selectMonthPlaceholder: string
+    selectYearPlaceholder: string
+    months: string[]
+  }
+  creditCardDialog: {
+    alerts: {
+      invalidAmount: string
+      invalidInstallments: string
+      creditCardNotFound: string
+    }
+    addExpenseTitle: string
+    amountLabel: string
+    descriptionLabel: string
+    categoryLabel: string
+    creditCardLabel: string
+    creditCardPlaceholder: string
+    noCreditCardsOption: string
+    clearSelectionSr: string
+    installmentsLabel: string
+    installmentsPlaceholder: string
+    singlePayment: string
+    installmentsOption: (count: number) => string
+    otherInstallmentsOption: string
+    customInstallmentsPlaceholder: string
+    perInstallment: string
+    executionNotice: string
+    dateLabel: string
+    recurringExpenseLabel: string
+    recurringNoteSingle: string
+    recurringNoteMultiple: string
+    addExpenseButton: string
+    selectCategoryPlaceholder: string
+    categoryInputPlaceholder: string
+  }
+  incomeDialog: {
+    title: string
+    description: string
+    descriptionPlaceholder: string
+    amount: string
+    amountPlaceholder: string
+    paused: string
+    date: string
+    submit: string
+    alerts: {
+      noDescription: string
+      invalidAmount: string
+    }
   }
 }
 
@@ -134,7 +217,93 @@ const translations: Record<AvailableLanguage, Translations> = {
         overBudget:"Over budget by ",
         noCategories: "No budget categories yet.",
       },
+      sortCategories: "Sort categories",
+      sortOptions: {
+        chronological: "Chronologically",
+        chronologicalInverse: "Chronologically Inverse",
+        alphabetical: "Alphabetically",
+        alphabeticalInverse: "Alphabetically Inverse",
+        budget: "By Budget",
+        budgetInverse: "By Budget Inverse",
+        lastExpense: "By Last Expense",
+        lastExpenseInverse: "By Last Expense Inverse",
+      },
+      noExpensesInCategory: "No expenses in this category",
+      addIncome: "Add Income",
+      addExpense: "Add Expense",
+      addCategory: "Add Category",
+      addLabel: "Add"
     },
+    dialog:{
+      pleaseEnterCategoryName: "Please enter a category name",
+      addCategoryTitle: "Add Category",
+      categoryNameLabel: "Name",
+      categoryBudgetLabel: "Monthly Budget (optional)",
+      categoryColorLabel: "Color",
+      addCategoryButton: "Add Category",
+      categoryNamePlaceholder: "e.g., Groceries, Rent, Entertainment",
+      addCreditCardTitle: "Add Credit Card",
+      creditCardDescriptionLabel: "Description",
+      creditCardClosingDayLabel: "Closing Day (1-30)",
+      creditCardDueDayLabel: "Due Day (1-30)",
+      creditCardGoodThruLabel: "Good Thru (Month/Year)",
+      creditCardPausedLabel: "Pause this credit card",
+      addCreditCardButton: "Add Credit Card",
+      creditCardDescriptionAlert: "Please enter a description",
+      creditCardClosingDayAlert: "Please enter a valid closing day (1-30)",
+      creditCardDueDayAlert: "Please enter a valid due day (1-30)",
+      creditCardGoodThruAlert: "Please select both month and year for Good Thru date",
+      selectMonthPlaceholder: "Month",
+      selectYearPlaceholder: "Year",
+      months: [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ]
+    },
+    creditCardDialog: {
+      alerts: {
+        invalidAmount: "Please enter a valid amount",
+        invalidInstallments: "Please enter a valid number of installments (minimum 2)",
+        creditCardNotFound: "Selected credit card not found"
+      },
+      addExpenseTitle: "Add Expense",
+      amountLabel: "Amount",
+      descriptionLabel: "Description (optional)",
+      categoryLabel: "Category",
+      creditCardLabel: "Credit Card (optional)",
+      creditCardPlaceholder: "Select credit card",
+      noCreditCardsOption: "No credit cards available",
+      clearSelectionSr: "Clear selection",
+      installmentsLabel: "Installments",
+      installmentsPlaceholder: "Select number of installments",
+      singlePayment: "1 (single payment)",
+      installmentsOption: (n) => `${n} installments`,
+      otherInstallmentsOption: "Other...",
+      customInstallmentsPlaceholder: "Number of installments",
+      perInstallment: "Per installment:",
+      executionNotice: "This expense will be executed on ",
+      dateLabel: "Date",
+      recurringExpenseLabel: "Recurring monthly expense",
+      recurringNoteSingle: "This expense will be automatically copied to future months.",
+      recurringNoteMultiple: "This installment plan will be automatically copied to future months when a new month starts.",
+      addExpenseButton: "Add Expense",
+      selectCategoryPlaceholder: "Select category",
+      categoryInputPlaceholder: "e.g., Grocery shopping",
+    },
+    incomeDialog: {
+      title: "Add Income",
+      description: "Description",
+      descriptionPlaceholder: "e.g., Salary, Freelance work",
+      amount: "Amount",
+      amountPlaceholder: "0.00",
+      paused: "Pause this income",
+      date: "Date",
+      submit: "Add Income",
+      alerts: {
+        noDescription: "Please enter a description",
+        invalidAmount: "Please enter a valid amount",
+      },
+    }
   },
   es: {
     settings: {
@@ -199,6 +368,92 @@ const translations: Record<AvailableLanguage, Translations> = {
         add: "Agregar Categoría",
         overBudget:"Sobrepasado en ",
         noCategories: "Sin categorías de presupuesto aún.",
+      },
+      sortCategories: "Ordenar categorías",
+      sortOptions: {
+        chronological: "Cronológicamente",
+        chronologicalInverse: "Cronológicamente Inverso",
+        alphabetical: "Alfabéticamente",
+        alphabeticalInverse: "Alfabéticamente Inverso",
+        budget: "Por Presupuesto",
+        budgetInverse: "Por Presupuesto Inverso",
+        lastExpense: "Por Último Gasto",
+        lastExpenseInverse: "Por Último Gasto Inverso",
+      },
+      noExpensesInCategory: "No hay gastos en esta categoría",
+      addIncome: "Nuevo ingreso",
+      addExpense: "Nuevo gasto",
+      addCategory: "Nueva categoría",
+      addLabel: "Agregar"
+    },
+    dialog:{
+      pleaseEnterCategoryName: "Por favor introduce un nombre para la categoría",
+      addCategoryTitle: "Agregar Categoría",
+      categoryNameLabel: "Nombre",
+      categoryBudgetLabel: "Presupuesto Mensual (opcional)",
+      categoryColorLabel: "Color",
+      addCategoryButton: "Agregar Categoría",
+      categoryNamePlaceholder: "ej. Comida, Alquiler, Entretenimiento",
+      addCreditCardTitle: "Agregar Tarjeta de Crédito",
+      creditCardDescriptionLabel: "Descripción",
+      creditCardClosingDayLabel: "Día de Cierre (1-30)",
+      creditCardDueDayLabel: "Día de Vencimiento (1-30)",
+      creditCardGoodThruLabel: "Válida Hasta (Mes/Año)",
+      creditCardPausedLabel: "Pausar esta tarjeta de crédito",
+      addCreditCardButton: "Agregar Tarjeta de Crédito",
+      creditCardDescriptionAlert: "Por favor ingresa una descripción",
+      creditCardClosingDayAlert: "Por favor ingresa un día de cierre válido (1-30)",
+      creditCardDueDayAlert: "Por favor ingresa un día de vencimiento válido (1-30)",
+      creditCardGoodThruAlert: "Por favor selecciona mes y año para la fecha de vencimiento",
+      selectMonthPlaceholder: "Mes",
+      selectYearPlaceholder: "Año",
+      months: [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      ],
+    },
+    creditCardDialog: {
+      alerts: {
+        invalidAmount: "Por favor ingresa un monto válido",
+        invalidInstallments: "Por favor ingresa un número válido de cuotas (mínimo 2)",
+        creditCardNotFound: "No se encontró la tarjeta seleccionada"
+      },
+      addExpenseTitle: "Agregar Gasto",
+      amountLabel: "Monto",
+      descriptionLabel: "Descripción (opcional)",
+      categoryLabel: "Categoría",
+      creditCardLabel: "Tarjeta de Crédito (opcional)",
+      creditCardPlaceholder: "Selecciona tarjeta de crédito",
+      noCreditCardsOption: "No hay tarjetas disponibles",
+      clearSelectionSr: "Limpiar selección",
+      installmentsLabel: "Cuotas",
+      installmentsPlaceholder: "Selecciona número de cuotas",
+      singlePayment: "1 (pago único)",
+      installmentsOption: (n) => `${n} cuotas`,
+      otherInstallmentsOption: "Otra...",
+      customInstallmentsPlaceholder: "Número de cuotas",
+      perInstallment: "Por cuota:",
+      executionNotice: "Este gasto se ejecutará el ",
+      dateLabel: "Fecha",
+      recurringExpenseLabel: "Gasto mensual recurrente",
+      recurringNoteSingle: "Este gasto se copiará automáticamente en los meses siguientes.",
+      recurringNoteMultiple: "Este plan de cuotas se copiará automáticamente en los meses siguientes al comenzar un nuevo mes.",
+      addExpenseButton: "Agregar Gasto",
+      selectCategoryPlaceholder: "Selecciona categoría",
+      categoryInputPlaceholder: "p. ej., Compra de supermercado",
+    },
+     incomeDialog: {
+      title: "Nuevo Ingreso",
+      description: "Descripción",
+      descriptionPlaceholder: "por ej., Sueldo, Trabajo freelance",
+      amount: "Monto",
+      amountPlaceholder: "0,00",
+      paused: "Pausar este ingreso",
+      date: "Fecha",
+      submit: "Agregar Ingreso",
+      alerts: {
+        noDescription: "Por favor ingresa una descripción",
+        invalidAmount: "Por favor ingresa un monto válido",
       },
     },
   },

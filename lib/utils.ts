@@ -247,3 +247,155 @@ export function generateMonthOptions(expenses: Expense[] = [], incomes: Income[]
     currentYearMonth,
   }
 }
+
+export function getCreditCardDates(year: number, month: number, closingDay: number, dueDay: number ) {
+  const today = new Date()
+
+  let nextMonthYear = year
+  let nextMonth = month + 1
+
+  if (nextMonth > 12) {
+    nextMonth = 1
+    nextMonthYear++
+  }
+  const closingDateThisMonth = new Date(year, month - 1, closingDay)
+  const dueDateThisMonth = new Date(year, month - 1, dueDay)
+
+  // If closing day has passed, the next closing is next month
+  if (closingDateThisMonth < today) {
+    closingDateThisMonth.setMonth(closingDateThisMonth.getMonth() + 1)
+  }
+
+  // If due day has passed, the next due date is next month
+  if (dueDateThisMonth < today) {
+    dueDateThisMonth.setMonth(dueDateThisMonth.getMonth() + 1)
+  }
+
+  // Calculate next month's closing and due dates
+  const closingDateNextMonth = new Date(nextMonthYear, nextMonth - 1, closingDay)
+  if (closingDay > dueDay) {
+    nextMonth++
+    if (nextMonth > 12) {
+      nextMonth = 1
+      nextMonthYear++
+    }
+  }
+  const dueDateNextMonth = new Date(nextMonthYear, nextMonth - 1, dueDay)
+
+  return {closingDateThisMonth, dueDateThisMonth, closingDateNextMonth, dueDateNextMonth}
+}
+
+export function getCreditCardRelevantDates(closingDay: number, dueDay: number, buyingDate: Date) {
+  const y = buyingDate.getFullYear();
+  const m = buyingDate.getMonth();
+  const d = buyingDate.getDate();
+
+  const baseDate = new Date(y, m, d, 12); // Set hour to 12 to avoid timezone issues
+
+  const getSafeDate = (year: number, month: number, day: number) => new Date(year, month, day, 12);
+
+   // Due dates
+  const dueDateThisMonth = getSafeDate(y, m, dueDay);
+  const dueDateLastMonth = getSafeDate(m === 0 ? y - 1 : y, m === 0 ? 11 : m - 1, dueDay);
+  const dueDateNextMonth = getSafeDate(m === 11 ? y + 1 : y, m === 11 ? 0 : m + 1, dueDay);
+
+  // Closing dates
+  const closingDateThisMonth = getSafeDate(y, m, closingDay);
+  const closingDateLastMonth = getSafeDate(m === 0 ? y - 1 : y, m === 0 ? 11 : m - 1, closingDay);
+  const closingDateNextMonth = getSafeDate(m === 11 ? y + 1 : y, m === 11 ? 0 : m + 1, closingDay);
+
+  const previousDueDate = baseDate >= dueDateThisMonth ? dueDateThisMonth : dueDateLastMonth;
+  const nextDueDate = baseDate < dueDateThisMonth ? dueDateThisMonth : dueDateNextMonth;
+
+  const previousClosingDate = baseDate >= closingDateThisMonth ? closingDateThisMonth : closingDateLastMonth;
+  const nextClosingDate = baseDate < closingDateThisMonth ? closingDateThisMonth : closingDateNextMonth;
+
+
+  // Calculate second next dates
+  const secondNextDueDate = getSafeDate(
+    nextDueDate.getMonth() === 11 ? nextDueDate.getFullYear() + 1 : nextDueDate.getFullYear(),
+    (nextDueDate.getMonth() + 1) % 12,
+    dueDay
+  );
+
+  const secondNextClosingDate = getSafeDate(
+    nextClosingDate.getMonth() === 11 ? nextClosingDate.getFullYear() + 1 : nextClosingDate.getFullYear(),
+    (nextClosingDate.getMonth() + 1) % 12,
+    closingDay
+  );
+
+  return { previousDueDate, nextDueDate, nextClosingDate, secondNextDueDate, secondNextClosingDate };
+}
+
+export function getSafeDateFromMonthAndYear(month: number, year: number): Date {
+  const today = new Date();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth() + 1; // 1-based
+  const todayDay = today.getDate();
+
+  const isCurrentMonth = year === todayYear && month === todayMonth;
+
+  // Find how many days this month has
+  const lastDayOfMonth = new Date(year, month, 0).getDate(); // day 0 of next month gives last day of current
+
+  const day = isCurrentMonth
+    ? Math.min(todayDay, lastDayOfMonth)
+    : 1;
+
+  return new Date(year, month - 1, day, 12); // hour 12 avoids timezone issues
+}
+
+export function calculateDates(givenDate: Date, closingDay: number, dueDay: number) {
+  const addMonths = (date: Date, months: number) => {
+    const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, date.getUTCDate()));
+    return d;
+  };
+
+  const setDay = (date: Date, day: number) => {
+    const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), day));
+    return d;
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toISOString().substring(0, 10); // YYYY-MM-DD
+  };
+
+  // Make sure givenDate is clean (UTC)
+  givenDate = new Date(Date.UTC(givenDate.getUTCFullYear(), givenDate.getUTCMonth(), givenDate.getUTCDate()));
+
+  const diff = dueDay - closingDay;
+
+  // 1. Find next immediate due date
+  let nextDue: Date;
+  if (givenDate.getUTCDate() < dueDay) {
+    nextDue = setDay(givenDate, dueDay);
+  } else {
+    nextDue = setDay(addMonths(givenDate, 1), dueDay);
+  }
+
+  // 2. Find next immediate closing date
+  const nextClosing = new Date(nextDue);
+  nextClosing.setUTCDate(nextDue.getUTCDate() - diff);
+
+  // 3. Find previous closing date (one month before nextClosing)
+  const prevClosing = addMonths(nextClosing, -1);
+
+  // 4. Find previous due date (prevClosing + diff)
+  const prevDue = new Date(prevClosing);
+  prevDue.setUTCDate(prevClosing.getUTCDate() + diff);
+
+  // 5. Find next closing second (one month after nextClosing)
+  const nextClosingSecond = addMonths(nextClosing, 1);
+
+  // 6. Find next due second (one month after nextDue)
+  const nextDueSecond = addMonths(nextDue, 1);
+
+  return {
+    prevClosing: formatDate(prevClosing),
+    prevDue: formatDate(prevDue),
+    nextClosing: formatDate(nextClosing),
+    nextDue: formatDate(nextDue),
+    nextClosingSecond: formatDate(nextClosingSecond),
+    nextDueSecond: formatDate(nextDueSecond),
+  };
+}

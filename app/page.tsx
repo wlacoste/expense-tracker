@@ -521,6 +521,7 @@ export default function Home() {
             onDeleteCategory={deleteCategory}
             onUpdateCreditCard={updateCreditCard}
             onDeleteCreditCard={deleteCreditCard}
+            language={language}
           />
         )
       case "analytics":
@@ -582,6 +583,7 @@ export default function Home() {
           onAddExpense={() => setExpenseDialogOpen(true)}
           onAddIncome={() => setIncomeDialogOpen(true)}
           onAddCategory={() => setCategoryDialogOpen(true)}
+          language={language}
         />
         <AddExpenseDialog
           open={expenseDialogOpen}
@@ -593,18 +595,26 @@ export default function Home() {
           categories={ensureOthersCategoryInList(categories)}
           creditCards={creditCards}
           preselectedCategoryId={preselectedCategoryId}
+          language={language}
         />
-        <AddIncomeDialog open={incomeDialogOpen} onOpenChange={setIncomeDialogOpen} onAddIncome={addIncome} />
+        <AddIncomeDialog 
+          open={incomeDialogOpen}
+          onOpenChange={setIncomeDialogOpen}
+          onAddIncome={addIncome}
+          language={language}
+        />
         <AddCategoryDialog
           open={categoryDialogOpen}
           onOpenChange={setCategoryDialogOpen}
           onAddCategory={addCategory}
           enabledCategoriesCount={enabledCategoriesCount}
+          language={language}
         />
         <AddCreditCardDialog
           open={creditCardDialogOpen}
           onOpenChange={setCreditCardDialogOpen}
           onAddCreditCard={addCreditCard}
+          language={language}
         />
         <Toaster />
       </main>

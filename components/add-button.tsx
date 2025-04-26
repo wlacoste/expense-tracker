@@ -3,15 +3,19 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, ArrowUpIcon, ArrowDownIcon, FolderIcon } from "lucide-react"
+import { getTranslations } from "@/lib/translations"
 
 interface AddButtonProps {
   onAddExpense: () => void
   onAddIncome: () => void
   onAddCategory: () => void
+  language: string
 }
 
-export default function AddButton({ onAddExpense, onAddIncome, onAddCategory }: AddButtonProps) {
+export default function AddButton({ onAddExpense, onAddIncome, onAddCategory,  language,
+}: AddButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const t = getTranslations(language as any)
 
   const toggleMenu = () => {
     setIsOpen(!isOpen)
@@ -48,8 +52,8 @@ export default function AddButton({ onAddExpense, onAddIncome, onAddCategory }: 
           }}
         >
           <ArrowUpIcon className="h-5 w-5 text-green-500" />
-          <span>Add Income</span>
-        </Button>
+          <span>{t.dashboard.addIncome}</span>
+          </Button>
 
         <Button
           className="h-12 w-40 px-4 rounded-full shadow-lg flex items-center gap-2 transition-all duration-300 ease-in-out"
@@ -59,8 +63,8 @@ export default function AddButton({ onAddExpense, onAddIncome, onAddCategory }: 
           }}
         >
           <ArrowDownIcon className="h-5 w-5 text-red-500" />
-          <span>Add Expense</span>
-        </Button>
+          <span>{t.dashboard.addExpense}</span>
+          </Button>
 
         <Button
           className="h-12 w-40 px-4 rounded-full shadow-lg flex items-center gap-2 transition-all duration-300 ease-in-out"
@@ -70,8 +74,8 @@ export default function AddButton({ onAddExpense, onAddIncome, onAddCategory }: 
           }}
         >
           <FolderIcon className="h-5 w-5 text-blue-500" />
-          <span>Add Category</span>
-        </Button>
+          <span>{t.dashboard.addCategory}</span>
+          </Button>
       </div>
 
       {/* Main FAB button - in a separate container */}
@@ -82,7 +86,7 @@ export default function AddButton({ onAddExpense, onAddIncome, onAddCategory }: 
           onClick={toggleMenu}
         >
           <Plus className={`h-20 w-20 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
-          <span className="sr-only">Add</span>
+          <span className="sr-only">{t.dashboard.addLabel}</span>
         </Button>
       </div>
     </>
