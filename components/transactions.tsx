@@ -96,7 +96,7 @@ export default function Transactions({
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="credit-cards">Credit Cards</TabsTrigger>
+          <TabsTrigger value="credit-cards">Cards</TabsTrigger>
           <TabsTrigger value="reserves">Reserves</TabsTrigger>
         </TabsList>
 
