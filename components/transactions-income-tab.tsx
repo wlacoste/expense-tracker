@@ -200,3 +200,5 @@ export default function TransactionsIncomeTab({ incomes, onUpdateIncome, onDelet
     </div>
   )
 }
+
+export type { Income }

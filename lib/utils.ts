@@ -399,3 +399,36 @@ export function calculateDates(givenDate: Date, closingDay: number, dueDay: numb
     nextDueSecond: formatDate(nextDueSecond),
   };
 }
+export function calculateInterestEarned(reserve: Reserve): number {
+  if (!reserve.interestRate) return 0;
+
+  const principal = reserve.amount;
+  const tna = reserve.interestRate / 100; // e.g. 37 → 0.37
+  const baseDays = 360;
+
+  const startDate = new Date(reserve.creationDate);
+  const endDate =  new Date();
+
+  const rawDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const diffInDays = Math.max(rawDays - 1, 0); // no negative interest
+
+  const interest = principal * (tna / baseDays) * diffInDays;
+  return interest;
+}
+
+export function calculateTotalInterest(reserve: Reserve): number {
+  if (!reserve.interestRate) return 0;
+
+  const principal = reserve.amount;
+  const tna = reserve.interestRate / 100; // e.g. 37 → 0.37
+  const baseDays = 360;
+
+  const startDate = new Date(reserve.creationDate);
+  const endDate = reserve.dissolutionDate ? new Date(reserve.dissolutionDate) : new Date();
+
+  const rawDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const diffInDays = Math.max(rawDays - 1, 0); // no negative interest
+
+  const interest = principal * (tna / baseDays) * diffInDays;
+  return interest;
+}

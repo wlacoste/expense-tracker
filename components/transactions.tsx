@@ -1,75 +1,40 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import TransactionsExpensesTab from "@/components/transactions-expenses-tab"
+import TransactionsIncomeTab from "@/components/transactions-income-tab"
+import TransactionsCategoriesTab from "@/components/transactions-categories-tab"
+import TransactionsCreditCardsTab from "@/components/transactions-credit-cards-tab"
+import TransactionsReservesTab from "@/components/transactions-reserves-tab"
 import { getMonthlyExpenses, getMonthlyIncomes, generateMonthOptions } from "@/lib/utils"
 import { ScrollableSelect } from "./scrollable-select"
-import TransactionsExpensesTab from "./transactions-expenses-tab"
-import TransactionsIncomeTab from "./transactions-income-tab"
-import TransactionsCategoriesTab from "./transactions-categories-tab"
-import TransactionsCreditCardsTab from "./transactions-credit-cards-tab"
-
-// Define the types
-interface Expense {
-  id: string
-  amount: number
-  description: string
-  categoryId: string
-  date: string
-  creditCardId?: string
-  executionDate?: string
-  expenseInstallmentId?: string
-  installmentQuantity?: number
-  installmentNumber?: number
-  totalAmount?: number
-  isPaid?: boolean
-  isRecurring?: boolean
-}
-
-interface Income {
-  id: string
-  amount: number
-  description: string
-  date: string
-  isPaused: boolean
-}
-
-interface Category {
-  id: string
-  name: string
-  color: string
-  budget?: number
-  orderNumber: number
-  isDisabled: boolean
-}
-
-interface CreditCard {
-  id: string
-  description: string
-  closingDay: number
-  dueDay: number
-  goodThruDate: string
-  isPaused: boolean
-}
 
 interface TransactionsProps {
-  expenses: Expense[]
-  incomes: Income[]
-  categories: Category[]
-  creditCards: CreditCard[]
+  expenses: any[]
+  incomes: any[]
+  categories: any[]
+  creditCards: any[]
+  reserves: any[] // Add this line
   selectedMonth: string
+  setSelectedMonth: (month: string) => void
+  onUpdateExpense: (expense: any) => void
+  onDeleteExpense: (id: string) => void
+  onDeleteMultipleExpenses: (ids: string[]) => void
   onAddCategory: () => void
   onAddCreditCard: () => void
-  setSelectedMonth: (month: string) => void
-  onUpdateExpense: (expense: Expense) => void
-  onDeleteExpense: (id: string) => void
-  onDeleteMultipleExpenses?: (ids: string[]) => void
-  onUpdateIncome: (income: Income) => void
+  onAddReserve: () => void // Add this line
+  onUpdateIncome: (income: any) => void
   onDeleteIncome: (id: string) => void
-  onUpdateCategory: (category: Category) => void
+  onUpdateCategory: (category: any) => void
   onDeleteCategory: (id: string) => void
-  onUpdateCreditCard: (creditCard: CreditCard) => void
+  onUpdateCreditCard: (creditCard: any) => void
   onDeleteCreditCard: (id: string) => void
+  onUpdateReserve: (reserve: any) => void // Add this line
+  onDeleteReserve: (id: string) => void // Add this line
+  language: string
+  favoriteCreditCardId?: string
+  onToggleFavoriteCreditCard: (id: string) => void
 }
 
 export default function Transactions({
@@ -77,6 +42,7 @@ export default function Transactions({
   incomes,
   categories,
   creditCards,
+  reserves, // Add this line
   selectedMonth,
   setSelectedMonth,
   onUpdateExpense,
@@ -84,14 +50,25 @@ export default function Transactions({
   onDeleteMultipleExpenses,
   onAddCategory,
   onAddCreditCard,
+  onAddReserve, // Add this line
   onUpdateIncome,
   onDeleteIncome,
   onUpdateCategory,
   onDeleteCategory,
   onUpdateCreditCard,
   onDeleteCreditCard,
+  onUpdateReserve, // Add this line
+  onDeleteReserve, // Add this line
+  language,
+  favoriteCreditCardId,
+  onToggleFavoriteCreditCard,
 }: TransactionsProps) {
-  // Generate month options
+  const [activeTab, setActiveTab] = useState("expenses")
+
+  // Get monthly expenses and incomes
+  const monthlyExpenses = getMonthlyExpenses(expenses, selectedMonth)
+  const monthlyIncomes = getMonthlyIncomes(incomes, selectedMonth)
+  // Combine all options for the ScrollableSelect
   const { pastOptions, currentOption, futureOptions } = useMemo(
     () => generateMonthOptions(expenses, incomes),
     [expenses, incomes],
@@ -101,10 +78,6 @@ export default function Transactions({
   const allOptions = useMemo(() => {
     return [...pastOptions, currentOption, ...futureOptions]
   }, [pastOptions, currentOption, futureOptions])
-
-  const monthlyExpenses = useMemo(() => getMonthlyExpenses(expenses, selectedMonth), [expenses, selectedMonth])
-  const monthlyIncomes = useMemo(() => getMonthlyIncomes(incomes, selectedMonth), [incomes, selectedMonth])
-
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
@@ -118,15 +91,16 @@ export default function Transactions({
         />
       </div>
 
-      <Tabs defaultValue="expenses">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-5 mb-4">
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="creditcards">Credit Cards</TabsTrigger>
+          <TabsTrigger value="credit-cards">Credit Cards</TabsTrigger>
+          <TabsTrigger value="reserves">Reserves</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="expenses" className="space-y-4 mt-4">
+        <TabsContent value="expenses" className="mt-0">
           <TransactionsExpensesTab
             expenses={monthlyExpenses}
             categories={categories}
@@ -137,7 +111,7 @@ export default function Transactions({
           />
         </TabsContent>
 
-        <TabsContent value="income" className="space-y-4 mt-4">
+        <TabsContent value="income" className="mt-0">
           <TransactionsIncomeTab
             incomes={monthlyIncomes}
             onUpdateIncome={onUpdateIncome}
@@ -145,7 +119,7 @@ export default function Transactions({
           />
         </TabsContent>
 
-        <TabsContent value="categories" className="space-y-4 mt-4">
+        <TabsContent value="categories" className="mt-0">
           <TransactionsCategoriesTab
             categories={categories}
             expenses={expenses}
@@ -155,13 +129,23 @@ export default function Transactions({
           />
         </TabsContent>
 
-        <TabsContent value="creditcards" className="space-y-4 mt-4">
+        <TabsContent value="credit-cards" className="mt-0">
           <TransactionsCreditCardsTab
             creditCards={creditCards}
             expenses={expenses}
             onUpdateCreditCard={onUpdateCreditCard}
             onDeleteCreditCard={onDeleteCreditCard}
             onAddCreditCard={onAddCreditCard}
+            favoriteCreditCardId={favoriteCreditCardId}
+            onToggleFavoriteCreditCard={onToggleFavoriteCreditCard}
+          />
+        </TabsContent>
+        <TabsContent value="reserves" className="mt-0">
+          <TransactionsReservesTab
+            reserves={reserves}
+            onUpdateReserve={onUpdateReserve}
+            onDeleteReserve={onDeleteReserve}
+            onAddReserve={onAddReserve}
           />
         </TabsContent>
       </Tabs>

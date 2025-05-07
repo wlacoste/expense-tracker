@@ -12,6 +12,8 @@ export function SummaryCards({
   monthlySavingsEndOfMonth,
   historicalSavings,
   endOfMonthSavings,
+  totalReserves,
+  totalReservesWithInterest,
   t,
 }: SummaryCardsProps) {
   return (
@@ -85,11 +87,11 @@ export function SummaryCards({
           <CardContent className="p-4 pt-0">
             <div className="flex items-center justify-between">
               <PiggyBankIcon className="h-6 w-6 text-amber-500" />
-              <span className={`text-2xl font-bold ${historicalSavings >= 0 ? "text-green-500" : "text-red-500"}`}>
-                {formatCurrency(historicalSavings)}
+              <span className={`text-2xl font-bold ${historicalSavings - totalReserves >= 0 ? "text-green-500" : "text-red-500"}`}>
+                { formatCurrency(historicalSavings - totalReserves)}
               </span>
             </div>
-            <div className="text-xs text-muted-foreground text-right mt-1">{t.dashboard.monthlySavings.note}</div>
+            <div className="text-xs text-muted-foreground text-right mt-1">{"Reserved: " + formatCurrency(totalReservesWithInterest)}</div>
           </CardContent>
         </Card>
 

@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { calculateExecutionDate, getFormattedDate, getTodayDate, formatDate } from "@/lib/utils"
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
 import { getTranslations } from "@/lib/translations"
+import { StarIcon } from "lucide-react"
 
 interface Expense {
   id: string
@@ -63,6 +64,7 @@ interface AddExpenseDialogProps {
   creditCards: CreditCard[]
   preselectedCategoryId?: string
   language: string
+  favoriteCreditCardId?: string
 }
 
 // Update the component to use the preselected category
@@ -74,6 +76,7 @@ export default function AddExpenseDialog({
   creditCards,
   language,
   preselectedCategoryId,
+  favoriteCreditCardId,
 }: AddExpenseDialogProps) {
   // Update the categoryId state to use the preselected category if provided
   const [categoryId, setCategoryId] = useState(preselectedCategoryId || "")
@@ -246,6 +249,13 @@ export default function AddExpenseDialog({
   // Filter out paused credit cards
   const activeCreditCards = creditCards.filter((card) => !card.isPaused)
 
+  // Sort credit cards to show favorite first
+  const sortedCreditCards = [...activeCreditCards].sort((a, b) => {
+    if (a.id === favoriteCreditCardId) return -1
+    if (b.id === favoriteCreditCardId) return 1
+    return a.description.localeCompare(b.description)
+  })
+
   // Filter out disabled categories and sort by orderNumber
   const activeCategories = categories
     .filter((category) => !category.isDisabled)
@@ -262,13 +272,13 @@ export default function AddExpenseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-        <DialogTitle>{t.creditCardDialog.addExpenseTitle}</DialogTitle>
+          <DialogTitle>{t.creditCardDialog.addExpenseTitle}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-2">
-          <Label htmlFor="amount">{t.creditCardDialog.amountLabel}</Label>
-          <Input
+            <Label htmlFor="amount">{t.creditCardDialog.amountLabel}</Label>
+            <Input
               id="amount"
               type="number"
               inputMode="decimal"
@@ -281,8 +291,8 @@ export default function AddExpenseDialog({
             />
           </div>
           <div className="space-y-2">
-          <Label htmlFor="description">{t.creditCardDialog.descriptionLabel}</Label>
-          <Input
+            <Label htmlFor="description">{t.creditCardDialog.descriptionLabel}</Label>
+            <Input
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -291,10 +301,10 @@ export default function AddExpenseDialog({
           </div>
 
           <div className="space-y-2">
-          <Label htmlFor="category">{t.creditCardDialog.categoryLabel}</Label>
-          <Select value={categoryId} onValueChange={setCategoryId}>
+            <Label htmlFor="category">{t.creditCardDialog.categoryLabel}</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
               <SelectTrigger id="category">
-              <SelectValue placeholder={t.creditCardDialog.selectCategoryPlaceholder} />
+                <SelectValue placeholder={t.creditCardDialog.selectCategoryPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {activeCategories
@@ -332,24 +342,35 @@ export default function AddExpenseDialog({
           </div>
 
           <div className="space-y-2">
-          <Label htmlFor="credit-card">{t.creditCardDialog.creditCardLabel}</Label>
-          <div className="flex gap-2 items-center">
+            <Label htmlFor="credit-card">{t.creditCardDialog.creditCardLabel}</Label>
+            <div className="flex gap-2 items-center">
               <div className="flex-1 relative">
-                <Select value={creditCardId} onValueChange={setCreditCardId} disabled={activeCreditCards.length === 0}>
+                <Select value={creditCardId} onValueChange={setCreditCardId} disabled={sortedCreditCards.length === 0}>
                   <SelectTrigger id="credit-card">
-                  <SelectValue placeholder={activeCreditCards.length === 0 ? t.creditCardDialog.noCreditCardsOption : t.creditCardDialog.creditCardPlaceholder} />
+                    <SelectValue
+                      placeholder={
+                        sortedCreditCards.length === 0
+                          ? t.creditCardDialog.noCreditCardsOption
+                          : t.creditCardDialog.creditCardPlaceholder
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {activeCreditCards.length > 0 ? (
-                      activeCreditCards.map((card) => (
+                    {sortedCreditCards.length > 0 ? (
+                      sortedCreditCards.map((card) => (
                         <SelectItem key={card.id} value={card.id}>
-                          {card.description}
+                          <div className="flex items-center">
+                            {card.id === favoriteCreditCardId && (
+                              <StarIcon className="h-3 w-3 mr-1 text-yellow-500" fill="currentColor" />
+                            )}
+                            {card.description}
+                          </div>
                         </SelectItem>
                       ))
                     ) : (
                       <SelectItem value="no-cards-available" disabled>
-                      {t.creditCardDialog.noCreditCardsOption}
-                    </SelectItem>
+                        {t.creditCardDialog.noCreditCardsOption}
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -362,8 +383,8 @@ export default function AddExpenseDialog({
                   className="h-10 w-10"
                   onClick={() => setCreditCardId("")}
                 >
-<span className="sr-only">{t.creditCardDialog.clearSelectionSr}</span>
-<svg
+                  <span className="sr-only">{t.creditCardDialog.clearSelectionSr}</span>
+                  <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
                     height="24"
@@ -386,13 +407,13 @@ export default function AddExpenseDialog({
           <Collapsible open={!!creditCardId} className="w-full">
             <CollapsibleContent className="space-y-2">
               <div className="space-y-2">
-              <Label htmlFor="installments">{t.creditCardDialog.installmentsLabel}</Label>
-              <Select value={installments} onValueChange={setInstallments}>
+                <Label htmlFor="installments">{t.creditCardDialog.installmentsLabel}</Label>
+                <Select value={installments} onValueChange={setInstallments}>
                   <SelectTrigger id="installments">
-                  <SelectValue placeholder={t.creditCardDialog.installmentsPlaceholder} />
+                    <SelectValue placeholder={t.creditCardDialog.installmentsPlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                  <SelectItem value="1">{t.creditCardDialog.singlePayment}</SelectItem>
+                    <SelectItem value="1">{t.creditCardDialog.singlePayment}</SelectItem>
                     {[3, 6, 9, 12, 18, 24].map((n) => (
                       <SelectItem key={n} value={n.toString()}>
                         {t.creditCardDialog.installmentsOption(n)}
@@ -411,7 +432,7 @@ export default function AddExpenseDialog({
                       value={customInstallments}
                       onChange={(e) => setCustomInstallments(e.target.value)}
                       placeholder={t.creditCardDialog.customInstallmentsPlaceholder}
-                      />
+                    />
                   </div>
                 )}
 
@@ -421,8 +442,8 @@ export default function AddExpenseDialog({
                       <span className="font-medium">Total:</span> {formatCurrency(Number.parseFloat(amount))}
                     </p>
                     <p className="text-sm">
-                    <span className="font-medium">{t.creditCardDialog.perInstallment}</span>
-                    {formatCurrency(
+                      <span className="font-medium">{t.creditCardDialog.perInstallment}</span>
+                      {formatCurrency(
                         Number.parseFloat(amount) /
                           (installments === "other"
                             ? Number.parseInt(customInstallments, 10)
@@ -439,7 +460,7 @@ export default function AddExpenseDialog({
             <CollapsibleContent>
               <div className="p-3 bg-muted/50 rounded-md">
                 <p className="text-sm text-muted-foreground">
-                {t.creditCardDialog.executionNotice}
+                  {t.creditCardDialog.executionNotice}
                   <span className="font-medium">{executionDate ? formatDate(executionDate) : ""}</span>
                 </p>
               </div>
@@ -447,24 +468,22 @@ export default function AddExpenseDialog({
           </Collapsible>
 
           <div className="space-y-2">
-          <Label htmlFor="date">{t.creditCardDialog.dateLabel}</Label>
-          <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+            <Label htmlFor="date">{t.creditCardDialog.dateLabel}</Label>
+            <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </div>
 
           <div className="flex items-center space-x-2">
             <Switch id="recurring-expense" checked={isRecurring} onCheckedChange={setIsRecurring} />
             <Label htmlFor="recurring-expense">{t.creditCardDialog.recurringExpenseLabel}</Label>
-            </div>
+          </div>
           {isRecurring && (
             <p className="text-xs text-muted-foreground">
-            {installments !== "1"
-              ? t.creditCardDialog.recurringNoteMultiple
-              : t.creditCardDialog.recurringNoteSingle}
-          </p>
+              {installments !== "1" ? t.creditCardDialog.recurringNoteMultiple : t.creditCardDialog.recurringNoteSingle}
+            </p>
           )}
 
           <Button type="submit" className="w-full">
-          {t.creditCardDialog.addExpenseButton}
+            {t.creditCardDialog.addExpenseButton}
           </Button>
         </form>
       </DialogContent>

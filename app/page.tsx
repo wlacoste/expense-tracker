@@ -12,6 +12,7 @@ import AddExpenseDialog from "@/components/add-expense-dialog"
 import AddIncomeDialog from "@/components/add-income-dialog"
 import AddCategoryDialog from "@/components/add-category-dialog"
 import AddCreditCardDialog from "@/components/add-credit-card-dialog"
+import AddReserveDialog from "@/components/add-reserve-dialog"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -29,6 +30,7 @@ import {
 import { getMonthlyIncomes } from "@/lib/utils"
 import type { AvailableLanguage } from "@/lib/translations"
 import type { Expense, Income, Category, CreditCard } from "@/components/dashboard/types"
+import { useAutoDeleteExpiredReserves } from '@/hooks/useAutoDeleteExpiredReserves'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -36,12 +38,15 @@ export default function Home() {
   const [incomeDialogOpen, setIncomeDialogOpen] = useState(false)
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
   const [creditCardDialogOpen, setCreditCardDialogOpen] = useState(false)
+  const [reserves, setReserves] = useState<any[]>([])
+  const [reserveDialogOpen, setReserveDialogOpen] = useState(false)
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [incomes, setIncomes] = useState<Income[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [creditCards, setCreditCards] = useState<CreditCard[]>([])
   const [language, setLanguage] = useState<AvailableLanguage>("en") // Default language is English
   const [categorySorting, setCategorySorting] = useState<string>("chronological")
+  const [favoriteCreditCardId, setFavoriteCreditCardId] = useState<string | undefined>(undefined)
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
@@ -206,6 +211,8 @@ export default function Home() {
       }
 
       setCreditCards(data.creditCards || [])
+      setReserves(data.reserves || []) // Add this line
+
       // Load language preference if available
       if (data.language) {
         setLanguage(data.language as AvailableLanguage)
@@ -213,6 +220,11 @@ export default function Home() {
 
       if (data?.categorySorting) {
         setCategorySorting(data.categorySorting)
+      }
+
+      // Load favorite credit card ID if available
+      if (data?.favoriteCreditCardId) {
+        setFavoriteCreditCardId(data.favoriteCreditCardId)
       }
     } else {
       // If no data exists, initialize with an "Others" category
@@ -279,17 +291,63 @@ export default function Home() {
       incomes,
       categories,
       creditCards,
+      reserves, // Add this line
       lastAccessDate: today,
       language,
-      categorySorting, // Add this line
+      categorySorting,
+      favoriteCreditCardId,
     })
-  }, [expenses, incomes, categories, creditCards, language, categorySorting])
+  }, [expenses, incomes, categories, creditCards, language, categorySorting, favoriteCreditCardId, reserves])
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage as AvailableLanguage)
     toast({
       title: "Language Changed",
       description: `The application language has been changed.`,
+    })
+  }
+
+  // Function to toggle favorite credit card
+  const toggleFavoriteCreditCard = (creditCardId: string) => {
+    if (favoriteCreditCardId === creditCardId) {
+      // If this card is already the favorite, remove it as favorite
+      setFavoriteCreditCardId(undefined)
+      toast({
+        title: "Favorite Removed",
+        description: "Credit card removed from favorites.",
+      })
+    } else {
+      // Otherwise, set this card as the favorite
+      setFavoriteCreditCardId(creditCardId)
+      toast({
+        title: "Favorite Added",
+        description: "Credit card set as favorite.",
+      })
+    }
+  }
+
+  const addReserve = (reserve: any) => {
+    setReserves([...reserves, { ...reserve, id: Date.now().toString() }])
+    toast({
+      title: "Reserve added",
+      description: "Your reserve has been added successfully.",
+    })
+    setReserveDialogOpen(false)
+  }
+
+  const updateReserve = (updatedReserve: any) => {
+    setReserves(reserves.map((reserve) => (reserve.id === updatedReserve.id ? updatedReserve : reserve)))
+    toast({
+      title: "Reserve updated",
+      description: "Your reserve has been updated successfully.",
+    })
+  }
+
+  const deleteReserve = (id: string) => {
+    setReserves(reserves.filter((reserve) => reserve.id !== id))
+    toast({
+      title: "Reserve deleted",
+      description: "Your reserve has been deleted successfully.",
     })
   }
 
@@ -464,6 +522,11 @@ export default function Home() {
       return
     }
 
+    // If this is the favorite card, remove it from favorites
+    if (favoriteCreditCardId === id) {
+      setFavoriteCreditCardId(undefined)
+    }
+
     setCreditCards(creditCards.filter((card) => card.id !== id))
     toast({
       title: "Credit Card deleted",
@@ -476,11 +539,15 @@ export default function Home() {
     setIncomes([])
     setCategories([])
     setCreditCards([])
+    setFavoriteCreditCardId(undefined)
     toast({
       title: "Data reset",
       description: "All your data has been reset successfully.",
     })
   }
+
+ useAutoDeleteExpiredReserves(reserves, deleteReserve, addIncome)
+
 
   // Update the renderContent function to pass the new props to Dashboard and Analytics
   const renderContent = () => {
@@ -499,6 +566,8 @@ export default function Home() {
             language={language}
             categorySorting={categorySorting}
             setCategorySorting={setCategorySorting}
+            favoriteCreditCardId={favoriteCreditCardId}
+            reserves={reserves} // Add this line
           />
         )
       case "transactions":
@@ -508,6 +577,7 @@ export default function Home() {
             incomes={incomes}
             categories={ensureOthersCategoryInList(categories)}
             creditCards={creditCards}
+            reserves={reserves} // Add this line
             selectedMonth={selectedMonth}
             setSelectedMonth={setSelectedMonth}
             onUpdateExpense={updateExpense}
@@ -515,13 +585,18 @@ export default function Home() {
             onDeleteMultipleExpenses={deleteMultipleExpenses}
             onAddCategory={() => setCategoryDialogOpen(true)}
             onAddCreditCard={() => setCreditCardDialogOpen(true)}
+            onAddReserve={() => setReserveDialogOpen(true)} // Add this line
             onUpdateIncome={updateIncome}
             onDeleteIncome={deleteIncome}
             onUpdateCategory={updateCategory}
             onDeleteCategory={deleteCategory}
             onUpdateCreditCard={updateCreditCard}
             onDeleteCreditCard={deleteCreditCard}
+            onUpdateReserve={updateReserve} // Add this line
+            onDeleteReserve={deleteReserve} // Add this line
             language={language}
+            favoriteCreditCardId={favoriteCreditCardId}
+            onToggleFavoriteCreditCard={toggleFavoriteCreditCard}
           />
         )
       case "analytics":
@@ -563,6 +638,8 @@ export default function Home() {
             language={language}
             categorySorting={categorySorting}
             setCategorySorting={setCategorySorting}
+            favoriteCreditCardId={favoriteCreditCardId}
+            reserves={reserves} // Add this line
           />
         )
     }
@@ -596,8 +673,9 @@ export default function Home() {
           creditCards={creditCards}
           preselectedCategoryId={preselectedCategoryId}
           language={language}
+          favoriteCreditCardId={favoriteCreditCardId}
         />
-        <AddIncomeDialog 
+        <AddIncomeDialog
           open={incomeDialogOpen}
           onOpenChange={setIncomeDialogOpen}
           onAddIncome={addIncome}
@@ -616,6 +694,7 @@ export default function Home() {
           onAddCreditCard={addCreditCard}
           language={language}
         />
+        <AddReserveDialog open={reserveDialogOpen} onOpenChange={setReserveDialogOpen} onAddReserve={addReserve} />
         <Toaster />
       </main>
     </ThemeProvider>

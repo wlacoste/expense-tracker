@@ -6,6 +6,7 @@ import { useDashboard } from "./useDashboard"
 import { SummaryCards } from "./SummaryCards"
 import { CreditCardSection } from "./CreditCardSection"
 import { CategorySection } from "./CategorySection"
+import { calculateInterestEarned, calculateTotalInterest, formatCurrency, formatDate } from "@/lib/utils"
 
 export default function Dashboard({
   expenses,
@@ -19,6 +20,7 @@ export default function Dashboard({
   language,
   categorySorting,
   setCategorySorting,
+  reserves,
 }: DashboardProps) {
   const {
     t,
@@ -53,6 +55,12 @@ export default function Dashboard({
     categorySorting,
     setCategorySorting,
   )
+
+    const totalReserves = reserves.reduce((sum, reserve) => sum + reserve.amount, 0)
+  const totalReservesWithInterest = reserves.reduce((sum, reserve) => {
+    const interestGenerated = calculateInterestEarned(reserve)
+    return sum + reserve.amount + interestGenerated
+  }, 0)
 
   return (
     <div className="container mx-auto p-4 space-y-6 pb-20">
@@ -89,6 +97,8 @@ export default function Dashboard({
         monthlySavingsEndOfMonth={monthlySavingsEndOfMonth}
         historicalSavings={historicalSavings}
         endOfMonthSavings={endOfMonthSavings}
+        totalReserves={totalReserves}
+        totalReservesWithInterest={totalReservesWithInterest}
         t={t}
       />
 

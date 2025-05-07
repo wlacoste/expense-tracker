@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { formatCurrency } from "@/lib/utils"
-import { AlertCircleIcon, ChevronDown, CreditCardIcon } from "lucide-react"
+import { AlertCircleIcon, ChevronDown, CreditCardIcon, StarIcon } from "lucide-react"
 import type { CreditCardSectionProps } from "./types"
 import { formatShortDate } from "./useDashboard"
 
@@ -13,7 +13,15 @@ export function CreditCardSection({
   totalExecutedCreditCardExpenses,
   totalPendingCreditCardExpenses,
   t,
+  favoriteCreditCardId,
 }: CreditCardSectionProps) {
+  // Sort credit card metrics to show favorite first
+  const sortedCreditCardMetrics = [...creditCardMetrics].sort((a, b) => {
+    if (a.card.id === favoriteCreditCardId) return -1
+    if (b.card.id === favoriteCreditCardId) return 1
+    return a.card.description.localeCompare(b.card.description)
+  })
+
   return (
     <>
       {/* Credit Card Expenses KPIs */}
@@ -70,7 +78,7 @@ export function CreditCardSection({
           <CollapsibleContent className="transition-all">
             <div className="w-full overflow-x-auto snap-x snap-mandatory pb-4 pt-2">
               <div className="flex space-x-4">
-                {creditCardMetrics.map((metric) => (
+                {sortedCreditCardMetrics.map((metric) => (
                   <Card
                     key={metric.card.id}
                     className="min-w-[80%] sm:min-w-[calc(50%-0.5rem)] w-[80%] sm:w-[calc(50%-0.5rem)] flex-shrink-0 snap-center"
@@ -79,7 +87,14 @@ export function CreditCardSection({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <CreditCardIcon className="h-4 w-4 mr-2 text-blue-500" />
-                          <CardTitle className="text-base font-medium">{metric.card.description}</CardTitle>
+                          <CardTitle className="text-base font-medium">
+                            <div className="flex items-center">
+                              {metric.card.id === favoriteCreditCardId && (
+                                <StarIcon className="h-3 w-3 mr-1 text-yellow-500" fill="currentColor" />
+                              )}
+                              {metric.card.description}
+                            </div>
+                          </CardTitle>
                         </div>
                         {metric.pendingTotal > 0 && (
                           <div className="text-xs font-medium text-amber-500">

@@ -38,14 +38,25 @@ interface CreditCard {
   isPaused: boolean
 }
 
+interface Reserve {
+  id: string
+  name?: string
+  amount: number
+  creationDate: string
+  dissolutionDate?: string
+  interestRate?: number
+}
+
 interface StorageData {
   expenses: Expense[]
   incomes: Income[]
   categories: Category[]
   creditCards: CreditCard[]
+  reserves: Reserve[]
   lastAccessDate?: string // Added to track the last time the app was accessed
   language?: string // Added to store the user's language preference
   categorySorting?: string // Added to store the category sorting preference
+  favoriteCreditCardId?: string // Added to store the favorite credit card ID
 }
 
 const STORAGE_KEY = "expense-tracker-data"
@@ -128,7 +139,7 @@ export function getLastAccessDate(): string | null {
 
 export function updateLastAccessDate(date: string): void {
   try {
-    const data = loadData() || { expenses: [], incomes: [], categories: [], creditCards: [] }
+    const data = loadData() || { expenses: [], incomes: [], categories: [], creditCards: [], reserves: [] }
     data.lastAccessDate = date
     saveData(data)
   } catch (error) {

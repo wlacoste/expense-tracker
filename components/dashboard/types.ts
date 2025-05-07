@@ -1,4 +1,5 @@
 import type React from "react"
+import { Reserve } from "../transactions-reserves-tab"
 
 export interface Expense {
   id: string
@@ -53,12 +54,12 @@ export interface CreditCardMetric {
   pendingTotal: number
 }
 
-// Update the DashboardProps interface to include categorySorting and setCategorySorting
 export interface DashboardProps {
   expenses: Expense[]
   incomes: Income[]
   categories: Category[]
   creditCards: CreditCard[]
+  reserves: Reserve[]
   selectedMonth: string
   setSelectedMonth: (month: string) => void
   onAddCategory: () => void
@@ -66,6 +67,7 @@ export interface DashboardProps {
   language: string
   categorySorting: string
   setCategorySorting: (value: string) => void
+  favoriteCreditCardId?: string
 }
 
 export interface CategorySectionProps {
@@ -90,6 +92,7 @@ export interface CreditCardSectionProps {
   totalExecutedCreditCardExpenses: number
   totalPendingCreditCardExpenses: number
   t: any
+  favoriteCreditCardId?: string
 }
 
 export interface SummaryCardsProps {
@@ -102,4 +105,6 @@ export interface SummaryCardsProps {
   historicalSavings: number
   endOfMonthSavings: number
   t: any
+  totalReserves:number
+  totalReservesWithInterest:number
 }

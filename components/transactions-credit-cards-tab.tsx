@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Edit2Icon, Trash2Icon, PlusCircle, CreditCardIcon } from "lucide-react"
+import { Edit2Icon, Trash2Icon, PlusCircle, CreditCardIcon, StarIcon } from "lucide-react"
 
 interface CreditCard {
   id: string
@@ -35,6 +35,8 @@ interface TransactionsCreditCardsTabProps {
   onUpdateCreditCard: (creditCard: CreditCard) => void
   onDeleteCreditCard: (id: string) => void
   onAddCreditCard: () => void
+  favoriteCreditCardId?: string
+  onToggleFavoriteCreditCard: (id: string) => void
 }
 
 export default function TransactionsCreditCardsTab({
@@ -43,6 +45,8 @@ export default function TransactionsCreditCardsTab({
   onUpdateCreditCard,
   onDeleteCreditCard,
   onAddCreditCard,
+  favoriteCreditCardId,
+  onToggleFavoriteCreditCard,
 }: TransactionsCreditCardsTabProps) {
   // Edit states
   const [editingCreditCard, setEditingCreditCard] = useState<CreditCard | null>(null)
@@ -139,6 +143,16 @@ export default function TransactionsCreditCardsTab({
             </div>
 
             <div className="flex space-x-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 ${favoriteCreditCardId === creditCard.id ? "text-yellow-500" : "text-muted-foreground"}`}
+                onClick={() => onToggleFavoriteCreditCard(creditCard.id)}
+                title={favoriteCreditCardId === creditCard.id ? "Remove from favorites" : "Add to favorites"}
+              >
+                <StarIcon className="h-4 w-4" fill={favoriteCreditCardId === creditCard.id ? "currentColor" : "none"} />
+              </Button>
+
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditCreditCard(creditCard)}>
                 <Edit2Icon className="h-4 w-4" />
               </Button>
