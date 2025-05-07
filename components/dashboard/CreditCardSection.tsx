@@ -89,10 +89,10 @@ export function CreditCardSection({
                           <CreditCardIcon className="h-4 w-4 mr-2 text-blue-500" />
                           <CardTitle className="text-base font-medium">
                             <div className="flex items-center">
+                              <span className="capitalize">{metric.card.description}</span>
                               {metric.card.id === favoriteCreditCardId && (
-                                <StarIcon className="h-3 w-3 mr-1 text-yellow-500" fill="currentColor" />
+                                <StarIcon className="h-3 w-3 ml-1 text-yellow-500" fill="currentColor" />
                               )}
-                              {metric.card.description}
                             </div>
                           </CardTitle>
                         </div>

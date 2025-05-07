@@ -327,7 +327,7 @@ export default function Home() {
   }
 
   const addReserve = (reserve: any) => {
-    setReserves([...reserves, { ...reserve, id: Date.now().toString() }])
+    setReserves([ { ...reserve, id: Date.now().toString() },...reserves])
     toast({
       title: "Reserve added",
       description: "Your reserve has been added successfully.",
@@ -391,7 +391,7 @@ export default function Home() {
   }
 
   const addIncome = (income: Income) => {
-    setIncomes([...incomes, { ...income, id: Date.now().toString() }])
+    setIncomes([{ ...income, id: Date.now().toString() },...incomes])
     toast({
       title: "Income added",
       description: "Your income has been added successfully.",
@@ -401,7 +401,7 @@ export default function Home() {
 
   // Update the addCategory function to handle the new fields
   const addCategory = (category: Category) => {
-    setCategories([...categories, { ...category, id: Date.now().toString() }])
+    setCategories([ { ...category, id: Date.now().toString() }, ...categories])
     toast({
       title: "Category added",
       description: "Your category has been added successfully.",

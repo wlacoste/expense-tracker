@@ -21,6 +21,7 @@ export default function Dashboard({
   categorySorting,
   setCategorySorting,
   reserves,
+  favoriteCreditCardId
 }: DashboardProps) {
   const {
     t,
@@ -110,6 +111,7 @@ export default function Dashboard({
         totalCreditCardExpensesThisMonth={totalCreditCardExpensesThisMonth}
         totalExecutedCreditCardExpenses={totalExecutedCreditCardExpenses}
         totalPendingCreditCardExpenses={totalPendingCreditCardExpenses}
+        favoriteCreditCardId={favoriteCreditCardId}
         t={t}
       />
 

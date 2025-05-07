@@ -47,7 +47,7 @@ export function useAutoDeleteExpiredReserves(
                   id: `interest-${reserve.id}-${Date.now()}`,
                   date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
                   amount: interestAmount,
-                  description: `Interest earned from reserve: ${reserve.description}`,
+                  description: `Interest from reserve: ${reserve.description ? reserve.description: reserve.amount}`,
                 }
 
                 // Add the new income
