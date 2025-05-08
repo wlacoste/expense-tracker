@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useMemo, useState } from "react"
-import { getMonthlyExpenses, getMonthlyIncomes, generateMonthOptions, getCreditCardDates, getCreditCardRelevantDates, getSafeDateFromMonthAndYear, calculateDates  } from "@/lib/utils"
+import { getMonthlyExpenses, getMonthlyIncomes, generateMonthOptions, getCreditCardDates, getCreditCardRelevantDates, getSafeDateFromMonthAndYear, calculateDates ,getTodayDate } from "@/lib/utils"
 import { getTranslations } from "@/lib/translations"
 import type { Expense, Income, Category, CreditCard } from "./types"
 
@@ -86,12 +86,12 @@ export function useDashboard(
       const executionDate = new Date(Date.UTC(year, month - 1, day))
       const [selectedYear, selectedMonthNum] = selectedMonth.split('-').map(Number)
   
-      const { previousDueDate, nextDueDate, nextClosingDate, secondNextDueDate, secondNextClosingDate } = getCreditCardRelevantDates(card.closingDay, card.dueDay,getSafeDateFromMonthAndYear(selectedMonthNum, selectedYear))
-      const { dueDateThisMonth, dueDateNextMonth } = getCreditCardDates(selectedYear, selectedMonthNum, card.closingDay, card.dueDay)
+      const { previousDueDate, nextDueDate, nextClosingDate, secondNextDueDate, secondNextClosingDate, previousClosingDate } = getCreditCardRelevantDates(card.closingDay, card.dueDay,getSafeDateFromMonthAndYear(selectedMonthNum, selectedYear))
+      const { dueDateThisMonth, dueDateNextMonth, closingDateThisMonth, closingDateNextMonth} = getCreditCardDates(selectedYear, selectedMonthNum, card.closingDay, card.dueDay)
 
       
   
-      return executionDate >= previousDueDate && executionDate < nextDueDate
+      return executionDate >= previousClosingDate && executionDate < dueDateThisMonth 
     })
   }, [monthlyExpenses, creditCards, selectedMonth])
 
@@ -155,13 +155,25 @@ export function useDashboard(
         }
         const dueDateNextMonth = new Date(nextMonthYear, nextMonth - 1, card.dueDay)
 
-        const { prevClosing, prevDue, nextClosing, nextDue, nextClosingSecond, nextDueSecond } = calculateDates(SelectedDate, card.closingDay, card.dueDay)
+        // const today = new Date()
+        const { prevClosing, prevDue, nextClosing, nextDue, nextClosingSecond, nextDueSecond } = calculateDates(today, card.closingDay, card.dueDay)
 
         
 
-console.log("creditCardExpensesThisPeriod",creditCardExpensesThisPeriod)
+        const thisCardExpenses = expenses.filter((expense) => expense.creditCardId === card.id)
+
+        const thisPeriodExpenses = thisCardExpenses.filter((expense) => {
+          return expense.executionDate == nextDue
+     
+        })
+        const nextPeriodExpenses = thisCardExpenses.filter((expense) => {
+          return expense.executionDate == nextDueSecond
+        })
+
+        
         // Calculate expenses for this card this month
-        const thisMonthExpenses = creditCardExpensesThisPeriod.filter((expense) => expense.creditCardId === card.id)
+        // const thisMonthExpenses = creditCardExpensesThisPeriod.filter((expense) => expense.creditCardId === card.id)
+      
 
         // Calculate pending expenses for this card (from all months, not just current month)
         const pendingExpenses = expenses.filter(
@@ -178,10 +190,10 @@ console.log("creditCardExpensesThisPeriod",creditCardExpensesThisPeriod)
 
         return {
           card,
-          thisMonthTotal: thisMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0),
+          thisMonthTotal: thisPeriodExpenses.reduce((sum, expense) => sum + expense.amount, 0),
           thisMonthClosingDate: nextClosing,
           thisMonthDueDate: nextDue,
-          nextMonthTotal: nextMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0),
+          nextMonthTotal: nextPeriodExpenses.reduce((sum, expense) => sum + expense.amount, 0),
           nextMonthClosingDate: nextClosingSecond,
           nextMonthDueDate: nextDueSecond,
           pendingTotal: pendingTotal,
