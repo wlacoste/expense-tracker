@@ -62,6 +62,20 @@ export function getMonthlyExpenses(expenses: Expense[], yearMonth: string): Expe
     return expenseYear === year && expenseMonth === month
   })
 }
+//get expenses on the month they were created
+export function getMonthExpenses(expenses: Expense[], yearMonth: string): Expense[] {
+  const [year, month] = yearMonth.split("-")
+
+  return expenses.filter((expense) => {
+    const dateToUse = expense.date
+    const expenseDate = parseLocalDate(dateToUse)
+    const expenseYear = expenseDate.getFullYear().toString()
+    // getMonth() is zero-based, so January is 0, February is 1, etc.
+    const expenseMonth = (expenseDate.getMonth() + 1).toString().padStart(2, "0")
+
+    return expenseYear === year && expenseMonth === month
+  })
+}
 
 /**
  * Gets incomes for a specific month and year

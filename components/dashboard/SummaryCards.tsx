@@ -14,6 +14,7 @@ export function SummaryCards({
   endOfMonthSavings,
   totalReserves,
   totalReservesWithInterest,
+  totalExpensesUptoToday,
   t,
 }: SummaryCardsProps) {
   return (
@@ -58,6 +59,7 @@ export function SummaryCards({
               <BarChart3Icon className="h-5 w-5 text-blue-500" />
               <span className="text-2xl font-bold">{formatCurrency(totalBudgeted)}</span>
             </div>
+            <div className="text-xs text-muted-foreground text-right mt-1">{formatCurrency(totalExpensesUptoToday)}</div>
           </CardContent>
         </Card>
 

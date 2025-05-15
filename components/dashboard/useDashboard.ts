@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useMemo, useState } from "react"
-import { getMonthlyExpenses, getMonthlyIncomes, generateMonthOptions, getCreditCardDates, getCreditCardRelevantDates, getSafeDateFromMonthAndYear, calculateDates ,getTodayDate } from "@/lib/utils"
+import { getMonthlyExpenses, getMonthlyIncomes,getMonthExpenses, generateMonthOptions, getCreditCardDates, getCreditCardRelevantDates, getSafeDateFromMonthAndYear, calculateDates ,getTodayDate } from "@/lib/utils"
 import { getTranslations } from "@/lib/translations"
 import type { Expense, Income, Category, CreditCard } from "./types"
 
@@ -52,6 +52,8 @@ export function useDashboard(
 
   // Get monthly expenses and incomes
   const monthlyExpenses = useMemo(() => getMonthlyExpenses(expenses, selectedMonth), [expenses, selectedMonth])
+  const monthExpenses = useMemo(() => getMonthExpenses(expenses, selectedMonth), [expenses, selectedMonth])
+
   const monthlyIncomes = useMemo(() => getMonthlyIncomes(incomes, selectedMonth), [incomes, selectedMonth])
 
   // Calculate adjusted monthly expenses (excluding future credit card expenses)
@@ -219,6 +221,10 @@ export function useDashboard(
     return adjustedMonthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   }, [adjustedMonthlyExpenses])
 
+  const totalExpensesUptoToday = useMemo(() => {
+    return monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+  }, [monthExpenses])
+
   // Calculate total expenses including pending credit card expenses
   const totalExpensesEndOfMonth = useMemo(() => {
     return monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0)
@@ -377,6 +383,7 @@ export function useDashboard(
     categorySorting,
     setCategorySorting,
     toggleCategoryExpansion,
+    totalExpensesUptoToday,
     locale: getLocaleFromLanguage(language), // Add this line
   }
 }

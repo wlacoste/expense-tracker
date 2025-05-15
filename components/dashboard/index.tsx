@@ -46,6 +46,7 @@ export default function Dashboard({
     expandedCategories,
     toggleCategoryExpansion,
     locale,
+    totalExpensesUptoToday
   } = useDashboard(
     expenses,
     incomes,
@@ -100,6 +101,7 @@ export default function Dashboard({
         endOfMonthSavings={endOfMonthSavings}
         totalReserves={totalReserves}
         totalReservesWithInterest={totalReservesWithInterest}
+        totalExpensesUptoToday={totalExpensesUptoToday}
         t={t}
       />
 
