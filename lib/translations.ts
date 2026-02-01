@@ -21,6 +21,11 @@ export interface Translations {
       cancel: string
       confirm: string
     }
+    about: {
+      title: string
+      description: string
+      version: string
+    }
   }
   dashboard: {
     title: string
@@ -176,6 +181,11 @@ const translations: Record<AvailableLanguage, Translations> = {
         cancel: "Cancel",
         confirm: "Reset All Data",
       },
+      about: {
+        title: "About",
+        description: "Application information",
+        version: "Version",
+      },
     },
     dashboard: {
       title: "Dashboard",
@@ -327,6 +337,11 @@ const translations: Record<AvailableLanguage, Translations> = {
           "Esto eliminará permanentemente todos tus datos, incluyendo gastos, fuentes de ingresos y categorías. Esta acción no se puede deshacer.",
         cancel: "Cancelar",
         confirm: "Restablecer Todos los Datos",
+      },
+      about: {
+        title: "Acerca de",
+        description: "Información de la aplicación",
+        version: "Versión",
       },
     },
     dashboard: {

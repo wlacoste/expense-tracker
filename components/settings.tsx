@@ -18,8 +18,11 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useTheme } from "next-themes"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Globe } from "lucide-react"
+import { Globe, Info } from "lucide-react"
 import { type AvailableLanguage, availableLanguages, getTranslations } from "@/lib/translations"
+
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.1.0"
+const COMMIT_SHA = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || null
 
 interface Category {
   id: string
@@ -176,6 +179,29 @@ export default function Settings({
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              {t.settings.about?.title || "About"}
+            </CardTitle>
+            <CardDescription>{t.settings.about?.description || "Application information"}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{t.settings.about?.version || "Version"}</span>
+              <span className="text-sm font-mono">
+                {APP_VERSION}
+                {COMMIT_SHA && (
+                  <span className="text-muted-foreground ml-1">
+                    ({COMMIT_SHA.slice(0, 7)})
+                  </span>
+                )}
+              </span>
             </div>
           </CardContent>
         </Card>
